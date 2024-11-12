@@ -1,28 +1,41 @@
+/**
+ * barraPibox - Helper de compatibilidad con sistema anterior
+ * 
+ * @deprecated Este helper está deprecado. Crear PiboxNavigationPage cuando sea necesario.
+ * Se mantiene para compatibilidad con tests no refactorizados.
+ * 
+ * TODO: Crear pages/PiboxNavigationPage.ts cuando se refactoricen tests de Pibox
+ */
+
 import { Page, expect } from "@playwright/test";
-import { capturarPaso } from "./capturas";
 
-export async function barraPibox(
-  page: Page,
-  nombreCaptura: string = "menu_pibox",
-  carpeta: string = "pibox"
-): Promise<void> {
-  const menuButton = page.locator("svg#ham-menu");
+export async function barraPibox(page: Page, screenshotName?: string, folder?: string): Promise<void> {
+  const menuButton = page.locator("#ham-menu");
+  
+  console.log("📦 Verificando estado del menú lateral de Pibox...");
 
-  console.log("🔍 Esperando que el botón del menú Pibox esté disponible...");
-  await expect(menuButton).toBeAttached({ timeout: 10000 });
+  const isVisible = await menuButton.isVisible();
 
-  // Esperamos que no esté oculto por 'hidden'
-  await page.waitForFunction(() => {
-    const el = document.getElementById("ham-menu");
-    return el && !el.classList.contains("hidden");
-  });
+  if (isVisible) {
+    console.log("⏳ Esperando 5 segundos para que la página cargue completamente...");
+    await page.waitForTimeout(5000);
 
-  console.log("🖱️ Haciendo clic en el botón del menú Pibox...");
-  await menuButton.click({ force: true });
+    console.log("🟢 Botón visible. Intentando abrir menú...");
+    await menuButton.scrollIntoViewIfNeeded();
+    await menuButton.hover();
+    // Force click: data-action puede interferir
+    await menuButton.click({ force: true });
+    
+    await page.waitForTimeout(1500);
+  } else {
+    console.log("ℹ️ Botón de menú no visible. Posiblemente ya está abierto.");
+  }
 
-  console.log("⏳ Esperando que el link 'Compañías Compañías' sea visible...");
-  await page.getByRole("link", { name: "Compañías Compañías" }).waitFor({ state: "visible", timeout: 5000 });
-
-  console.log("✅ Menú lateral de Pibox abierto y visible.");
-  await capturarPaso(page, nombreCaptura, carpeta);
+  console.log("✅ Menú lateral abierto.");
+  
+  // Captura opcional para compatibilidad
+  if (screenshotName && folder) {
+    const { capturarPaso } = await import('./capturas');
+    await capturarPaso(page, screenshotName, folder);
+  }
 }

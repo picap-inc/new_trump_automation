@@ -1,53 +1,45 @@
-/*import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { barraPicash } from "../utils/barraPicash";
-import { capturarPaso } from "../utils/capturas";
+/**
+ * Test: Validación del módulo Picash - Compras
+ * 
+ * Valida: Acceso a sección de Compras
+ * Flujo: Login → Menú → Picash → Menú Picash → Compras
+ */
 
-test.describe("Validación del módulo Picash", () => {
-  test("Ingresar a Picash", async ({ page }) => {
-    test.setTimeout(120000);
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
 
-    await test.step("Login en la plataforma", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "picash");
+test.describe('Validación del módulo Picash - Compras', () => {
+  test('Ingresar a Compras', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    picashNavigationPage,
+    picashPage
+  }, testInfo) => {
+    
+    await test.step('Login en la plataforma', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    await test.step("Abrir barra lateral general de navegación", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_barra_general", "picash");
+    await test.step('Abrir barra lateral general de navegación', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    await test.step("Navegar al módulo Picash y validar URL", async () => {
-      const picash = page.getByRole('link', { name: 'home Picash' });
-      await expect(picash).toBeVisible({ timeout: 10000 });
-      await picash.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/", {
-        timeout: 10000,
-      });
-      await capturarPaso(page, "03_click_modulo_picash", "picash");
+    await test.step('Navegar al módulo Picash', async () => {
+      await picashNavigationPage.navigateToPicashModule();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Picash');
     });
 
-    await test.step("Abrir menú lateral de Picash y validar", async () => {
-      const headingPicash = await barraPicash(page); 
-      await expect(headingPicash).toBeVisible({ timeout: 7000 }); 
-      await capturarPaso(page, "04_barra_picash_abierta", "picash");
+    await test.step('Abrir menú lateral de Picash', async () => {
+      await picashNavigationPage.openPicashSideMenu();
+      await loginPage.takeScreenshot(testInfo, '04 - Menú Picash');
     });
 
-    await test.step("Ingresar a Compras", async () => {
-      // Click en 'Compras'
-      const comprasPicash = page.getByRole('link', { name: 'Compras' });
-      await expect(comprasPicash).toBeVisible({ timeout: 7000 });
-      await comprasPicash.click();
-
-      // Validar URL
-      await expect(page).toHaveURL("https://admin.picap.io/picash/shopping", {
-        timeout: 10000,
-      });
-
-      // Captura de pantalla
-      await capturarPaso(page, "05_compras_picash", "picash");
+    await test.step('Ingresar a Compras', async () => {
+      await picashPage.navigateToCompras();
+      await loginPage.takeScreenshot(testInfo, '05 - Compras');
     });
   });
 });
-*/

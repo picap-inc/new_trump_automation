@@ -1,35 +1,49 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login"; 
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas";
+/**
+ * Test: Validación de Onboarding Dashboard
+ * 
+ * Valida: Navegación al dashboard de Onboarding y sus filtros
+ * Flujo: Login → Menú lateral → Onboarding → Dashboard
+ */
 
-test.describe("Validación de Onboarding Dashboard", () => {
-  test("Validar la página y sus respectivos filtros", async ({ page }) => {
-    await test.step("Iniciar sesión", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login");
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
+
+test.describe('Validación de Onboarding Dashboard', () => {
+  test('Validar la página y sus respectivos filtros', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    onboardingPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado en el sistema
+    await test.step('Iniciar sesión', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    await test.step("Abrir menú lateral", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_menu_lateral");
+    // When: abro el menú lateral
+    await test.step('Abrir menú lateral', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral abierto');
     });
 
-    await test.step("Desplegar módulo Onboarding", async () => {
-      await page.getByText('Onboarding', { exact: true }).click();
-      await capturarPaso(page, "03_desplegar_onboarding");
+    // And: despliego el módulo Onboarding
+    await test.step('Desplegar módulo Onboarding', async () => {
+      await onboardingPage.navigateToOnboarding();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Onboarding desplegado');
     });
 
-    await test.step("Esperar enlace 'Onboarding Dashboard'", async () => {
+    // And: espero el enlace del Dashboard
+    await test.step('Esperar enlace "Onboarding Dashboard"', async () => {
       await page.waitForSelector('text=Onboarding dashboard', { state: 'visible' });
-      await capturarPaso(page, "04_esperar_dashboard_link");
+      await loginPage.takeScreenshot(testInfo, '04 - Dashboard link visible');
     });
 
-    await test.step("Ir a Onboarding Dashboard", async () => {
-      await page.getByRole('link', { name: 'Onboarding dashboard' }).click();
-      await page.waitForURL("https://admin.picap.io/onboarding_dashboard", { timeout: 5000 });
-      await expect(page).toHaveURL("https://admin.picap.io/onboarding_dashboard");
-      await capturarPaso(page, "05_dashboard_abierto");
+    // Then: debería acceder al Dashboard
+    await test.step('Ir a Onboarding Dashboard', async () => {
+      await onboardingPage.navigateToDashboard();
+      await loginPage.takeScreenshot(testInfo, '05 - Dashboard abierto');
     });
   });
 });

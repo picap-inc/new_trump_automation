@@ -1,107 +1,83 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas"; 
+/**
+ * Test: Validación de Sub módulo Alertas
+ * 
+ * Valida: Flujo completo de gestión de alertas (filtros, búsqueda, creación)
+ * Flujo: Login → Monitoreo → Alertas → Filtros → Bandeja → Nueva Alerta
+ */
 
-test.describe("Validación de Sub módulo Alertas", () => {
-  test("Validar módulo Alertas", async ({ page }) => {
-    await test.step("Login y menú lateral", async () => {
-      await login(page);
-      await Barra(page);
-      await capturarPaso(page, "01_login_barra", "alertas");
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
+
+test.describe('Validación de Sub módulo Alertas', () => {
+  test('Validar módulo Alertas', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    monitoreoPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado en el sistema
+    await test.step('Login y menú lateral', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '01 - Login y menú');
     });
 
-    await test.step("Seleccionar Módulo Monitoreo", async () => {
-      const moduloMonitoreo = page.getByText("Monitoreo");
-      await expect(moduloMonitoreo).toBeVisible({ timeout: 10000 });
-      await moduloMonitoreo.click();
-      await capturarPaso(page, "02_monitoreo", "alertas");
+    // When: navego al módulo de Monitoreo
+    await test.step('Seleccionar Módulo Monitoreo', async () => {
+      await monitoreoPage.navigateToMonitoreo();
+      await loginPage.takeScreenshot(testInfo, '02 - Módulo Monitoreo');
     });
 
-    await test.step("Clic en Alertas", async () => {
-      const alertasModule = page.getByRole("link", { name: "Alertas" });
-      await expect(alertasModule).toBeVisible({ timeout: 10000 });
-      await alertasModule.click();
-      await capturarPaso(page, "03_alertas", "alertas");
+    // And: entro a Alertas
+    await test.step('Clic en Alertas', async () => {
+      await monitoreoPage.navigateToAlertas();
+      await loginPage.takeScreenshot(testInfo, '03 - Sección Alertas');
     });
 
-    await test.step("Aplicar filtros en Alertas", async () => {
-      const fechaInput = page.getByRole("textbox", { name: "Fecha de creación" });
-      await fechaInput.fill("2025-06-01");
-
-      const statusSelect = page.locator("#status_cd");
-      await statusSelect.selectOption({ label: "Activa" });
-
-      const nombreAlertaInput = page.getByRole("textbox", { name: "Nombre de la alerta" });
-      await nombreAlertaInput.fill("");
-      for (const char of "Alerta de fraude") {
-        await nombreAlertaInput.type(char, { delay: 100 });
-      }
-
-      const alertForSelect = page.locator("#alert_for_cd");
-      await alertForSelect.selectOption({ label: "Conductor" });
-
-      await capturarPaso(page, "04_filtros_alerta", "alertas");
+    // And: aplico filtros
+    await test.step('Aplicar filtros en Alertas', async () => {
+      await monitoreoPage.applyAlertFilters(
+        '2025-06-01',
+        'Activa',
+        'Alerta de fraude',
+        'Conductor'
+      );
+      await loginPage.takeScreenshot(testInfo, '04 - Filtros aplicados');
     });
 
-    await test.step("Buscar y limpiar filtros", async () => {
-      const buscarButton = page.getByRole("button", { name: "Buscar" });
-      await expect(buscarButton).toBeVisible();
-      await buscarButton.click();
-
-      const limpiarButton = page.getByRole("button", { name: "Limpiar" });
-      await expect(limpiarButton).toBeVisible();
-      await limpiarButton.click();
-
-      await page.waitForTimeout(1000);
-      await capturarPaso(page, "05_busqueda_limpiar", "alertas");
+    // And: busco y limpio filtros
+    await test.step('Buscar y limpiar filtros', async () => {
+      await monitoreoPage.search();
+      await monitoreoPage.clearFilters();
+      await loginPage.takeScreenshot(testInfo, '05 - Búsqueda y limpieza');
     });
 
-    await test.step("Navegar a Bandeja y Alertas creadas", async () => {
-      const bandejaLink = page.getByRole("link", { name: "Bandeja de conversaciones" });
-      await expect(bandejaLink).toBeVisible({ timeout: 10000 });
-      await bandejaLink.click();
-
-      const alertasCreadasLink = page.getByRole("link", { name: "Alertas creadas" });
-      await expect(alertasCreadasLink).toBeVisible({ timeout: 10000 });
-      await alertasCreadasLink.click();
-
-      await page.waitForTimeout(5000);
-      await capturarPaso(page, "06_alertas_creadas", "alertas");
+    // When: navego a otras secciones
+    await test.step('Navegar a Bandeja y Alertas creadas', async () => {
+      await monitoreoPage.navigateToBandeja();
+      await monitoreoPage.navigateToAlertasCreadas();
+      await loginPage.takeScreenshot(testInfo, '06 - Alertas creadas');
     });
 
-    await test.step("Formulario nueva alerta", async () => {
-      const crearNuevaAlertaBtn = page.getByRole("button", { name: "Crear nueva alerta" });
-      await expect(crearNuevaAlertaBtn).toBeVisible({ timeout: 10000 });
-      await crearNuevaAlertaBtn.click();
-
-      const inputNombreAlerta = page.getByRole("textbox", { name: "Nombre de la alerta" });
-      await expect(inputNombreAlerta).toBeVisible({ timeout: 5000 });
-      await capturarPaso(page, "07_formulario_visible", "alertas");
+    // And: abro formulario de nueva alerta
+    await test.step('Formulario nueva alerta', async () => {
+      await monitoreoPage.openNewAlertForm();
+      await loginPage.takeScreenshot(testInfo, '07 - Formulario visible');
     });
 
-    await test.step("Llenar formulario y cancelar", async () => {
-      const nombreInput = page.getByRole("textbox", { name: "Nombre", exact: true });
-      await nombreInput.fill("Prueba QA");
-
-      const alertaParaSelect = page.locator("#text_based_alert_alert_for_cd");
-      await alertaParaSelect.selectOption({ label: "Pasajero" });
-
-      const tipoAlertaSelect = page.locator("#text_based_alert_alert_kind_cd");
-      await tipoAlertaSelect.selectOption({ label: "Chat" });
-
-      const descripcionInput = page.getByRole("textbox", { name: "Descripción" });
-      await descripcionInput.fill("Prueba QA Automated");
-
-      const mensajeInput = page.getByRole("textbox", { name: "Mensaje o palabra clave (" });
-      await mensajeInput.fill("Mensaje de prueba;palabra clave");
-
-      await page.waitForTimeout(2000);
-      await capturarPaso(page, "08_formulario_lleno", "alertas");
-
-      const cancelarBtn = page.getByRole("button", { name: "Cancelar" });
-      await expect(cancelarBtn).toBeVisible();
-      await cancelarBtn.click();
+    // Then: debería poder llenar y cancelar el formulario
+    await test.step('Llenar formulario y cancelar', async () => {
+      await monitoreoPage.fillNewAlertForm(
+        'Prueba QA',
+        'Pasajero',
+        'Chat',
+        'Prueba QA Automated',
+        'Mensaje de prueba;palabra clave'
+      );
+      await loginPage.takeScreenshot(testInfo, '08 - Formulario lleno');
+      
+      await monitoreoPage.cancelNewAlertForm();
     });
   });
 });

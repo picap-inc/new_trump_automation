@@ -15,17 +15,17 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   timeout: 60000, // 60 segundos por prueba
-  fullyParallel: true,
+  fullyParallel: false, // Deshabilitado: ejecutar tests secuencialmente
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1, // Reintenta una vez en local, dos veces en CI
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1, // SIEMPRE usar solo 1 navegador a la vez
   reporter: 'html',
 
   use: {
     trace: 'on-first-retry',
     actionTimeout: 15000, // 15s de espera máxima por acción
     navigationTimeout: 30000, // 30s de espera máxima para navegación
-    headless: process.env.CI ? true : false, // Headless en CI, visible en local
+    headless: true, // Siempre headless para no abrir ventanas
     //screenshot: 'only-on-failure', // Capturas
   },
 
@@ -34,7 +34,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 }, // Ajuste de resolución
+        viewport: { width: 1280, height: 720 },
       },
     },
   ],

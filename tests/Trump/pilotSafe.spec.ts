@@ -1,63 +1,52 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas";
+/**
+ * Test: Navegación al módulo Trump - Pilot Safe
+ * 
+ * Valida: Acceso a Pilot Safe y aplicación de filtros
+ * Flujo: Login → Menú → Trump → Pilot Safe → Filtros
+ */
 
-test.describe("Navegación al módulo Trump", () => {
-  test("Ingresar a Pilot Safe y validar filtros", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await test.step("Iniciar sesión", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "trump");
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
+
+test.describe('Navegación al módulo Trump', () => {
+  test('Ingresar a Pilot Safe y validar filtros', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    trumpPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado
+    await test.step('Iniciar sesión', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    // Paso 2: Abrir el menú lateral
-    await test.step("Abrir menú lateral", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_menu_lateral", "trump");
+    // When: abro el menú lateral
+    await test.step('Abrir menú lateral', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    // Paso 3: Click en módulo Trump
-    await test.step("Click en módulo Trump", async () => {
-      const trump = page.getByText("TRUMP", { exact: true });
-      await expect(trump).toBeVisible({ timeout: 10000 });
-      await trump.click();
-      await capturarPaso(page, "03_modulo_trump", "trump");
+    // And: navego al módulo Trump
+    await test.step('Click en módulo Trump', async () => {
+      await trumpPage.navigateToTrump();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Trump');
     });
 
-    // Paso 4: Click en Pilot Safe
-    await test.step("Click en Pilot Safe", async () => {
-      const pilotSafe = page.getByRole("link", { name: "Pilot Safe" });
-      await expect(pilotSafe).toBeVisible({ timeout: 10000 });
-      await pilotSafe.click();
-      await capturarPaso(page, "04_pilot_safe", "trump");
+    // And: entro a Pilot Safe
+    await test.step('Click en Pilot Safe', async () => {
+      await trumpPage.navigateToPilotSafe();
+      await loginPage.takeScreenshot(testInfo, '04 - Pilot Safe');
     });
 
-    // Paso 5: Aplicar filtros de búsqueda
-    await test.step("Aplicar filtros de búsqueda", async () => {
-      // Seleccionar País: Colombia
-      const pais = page.getByLabel("País");
-      await pais.selectOption("Colombia");
-
-
-      // Seleccionar Estado: Inactiva
-      const estado = page.getByLabel("Estado");
-      await estado.selectOption("Inactiva");
-
-      // Seleccionar Tipo de Servicio: Picap Carro
-      const tipoServicio = page.getByLabel("Tipos de servicio");
-      await tipoServicio.selectOption("Picap Carro");
-
-      // Click en Buscar
-      const buscarBtn = page.getByRole("button", { name: "Buscar" });
-      await buscarBtn.click();
-      await page.waitForTimeout(5000); // Esperar que carguen los resultados
-      await capturarPaso(page, "05_filtros_busqueda", "trump");
-
-      // Click en Limpiar
-      const limpiarBtn = page.getByRole("button", { name: "Limpiar" });
-      await limpiarBtn.click();
-      await capturarPaso(page, "06_limpiar_filtros", "trump");
+    // Then: debería poder aplicar filtros
+    await test.step('Aplicar filtros de búsqueda', async () => {
+      await trumpPage.applyFilters('Colombia', 'Inactiva', 'Picap Carro');
+      await loginPage.takeScreenshot(testInfo, '05 - Filtros aplicados');
+      
+      await trumpPage.clearFilters();
+      await loginPage.takeScreenshot(testInfo, '06 - Filtros limpiados');
     });
   });
 });

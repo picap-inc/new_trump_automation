@@ -1,8 +1,40 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
 
 # Playwright
-node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/screenshots/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Autenticación (NO subir sesiones)
+.auth/
+*.json.auth
+
+# Screenshots
+screenshots/
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/

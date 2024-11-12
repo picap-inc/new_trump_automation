@@ -1,14 +1,20 @@
-import { Page } from "@playwright/test";
-import fs from "fs";
+/**
+ * capturarPaso - Helper de compatibilidad con sistema anterior
+ * 
+ * @deprecated Preferir usar ScreenshotHelper.attach() o BasePage.takeScreenshot()
+ * Este helper se mantiene para compatibilidad con tests no refactorizados
+ * 
+ * Uso en tests refactorizados:
+ * await loginPage.takeScreenshot(testInfo, 'label');
+ */
 
-export async function capturarPaso(page: Page, nombre: string, carpeta: string = "default") {
-  if (process.env.CI) return;
+import { Page } from '@playwright/test';
+import { ScreenshotHelper } from '../../utils/screenshot-helper';
 
-  const ruta = `screenshots/${carpeta}`;
-  if (!fs.existsSync(ruta)) fs.mkdirSync(ruta, { recursive: true });
-
-  await page.screenshot({
-    path: `${ruta}/${nombre}.png`,
-    fullPage: true,
-  });
+export async function capturarPaso(
+  page: Page, 
+  nombre: string, 
+  carpeta: string = 'default'
+): Promise<void> {
+  await ScreenshotHelper.capture(page, nombre, carpeta);
 }

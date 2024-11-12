@@ -1,53 +1,45 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { barraPicash } from "../utils/barraPicash";
-import { capturarPaso } from "../utils/capturas";
+/**
+ * Test: Validación del módulo Picash - Error de Carga
+ * 
+ * Valida: Acceso a sección de Error de Carga
+ * Flujo: Login → Menú → Picash → Menú Picash → Error de Carga
+ */
 
-test.describe("Validación del módulo Picash", () => {
-  test("Ingresar a Picash", async ({ page }) => {
-    test.setTimeout(120000);
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
 
-    await test.step("Login en la plataforma", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "picash");
+test.describe('Validación del módulo Picash - Error de Carga', () => {
+  test('Ingresar a Error de Carga', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    picashNavigationPage,
+    picashPage
+  }, testInfo) => {
+    
+    await test.step('Login en la plataforma', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    await test.step("Abrir barra lateral general de navegación", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_barra_general", "picash");
+    await test.step('Abrir barra lateral general de navegación', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    await test.step("Navegar al módulo Picash y validar URL", async () => {
-      const picash = page.getByRole('link', { name: 'home Picash' });
-      await expect(picash).toBeVisible({ timeout: 10000 });
-      await picash.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/", {
-        timeout: 10000,
-      });
-      await capturarPaso(page, "03_click_modulo_picash", "picash");
+    await test.step('Navegar al módulo Picash', async () => {
+      await picashNavigationPage.navigateToPicashModule();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Picash');
     });
 
-    await test.step("Abrir menú lateral de Picash y validar", async () => {
-      const headingPicash = await barraPicash(page); 
-      await expect(headingPicash).toBeVisible({ timeout: 7000 }); 
-      await capturarPaso(page, "04_barra_picash_abierta", "picash");
+    await test.step('Abrir menú lateral de Picash', async () => {
+      await picashNavigationPage.openPicashSideMenu();
+      await loginPage.takeScreenshot(testInfo, '04 - Menú Picash');
     });
 
-    await test.step("Ingresar a Errores en carga de archivo desde Créditos", async () => {
-      const creditos = page.locator('a').filter({ hasText: /^Créditos$/ });
-      await expect(creditos).toBeVisible({ timeout: 7000 });
-      await creditos.click();
-
-      const errorCarga = page.getByRole('link', { name: 'Errores en carga de archivo' });
-      await expect(errorCarga).toBeVisible({ timeout: 7000 });
-      await errorCarga.click();
-
-      await expect(page).toHaveURL("https://admin.picap.io/picash/credits/load_file_errors", {
-        timeout: 10000,
-      });
-
-      await capturarPaso(page, "05_errores_carga_archivo", "picash");
+    await test.step('Ingresar a Error de Carga', async () => {
+      await picashPage.navigateToErrorCarga();
+      await loginPage.takeScreenshot(testInfo, '05 - Error de Carga');
     });
   });
 });
