@@ -28,18 +28,20 @@ jobs:
       - name: 🔽 Instalar Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: 🚀 Ejecutar pruebas de Playwright
-        run: npx playwright test --reporter=json
+      - name: 🚀 Ejecutar pruebas y generar JSON
+        run: |
+          mkdir -p test-results  # Crear carpeta si no existe
+          npx playwright test --reporter=json --output=test-results/results.json
 
       - name: 🏷️ Subir resultados JSON como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
-          path: test-results.json
+          path: test-results/results.json
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
-          if grep -q '"failures": 0' test-results.json; then
+          if grep -q '"failed": 0' test-results/results.json; then
             STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente."
           else
             STATUS_MESSAGE="❌ Algunas pruebas fallaron. Revisa los logs."
