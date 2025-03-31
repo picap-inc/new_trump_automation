@@ -22,29 +22,37 @@ jobs:
         with:
           node-version: 18
 
-      - name: 🔧 Instalar jq (para procesar JSON)
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: 🔧 Instalar dependencias (jq + browsers)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          npx playwright install --with-deps
 
-      - name: 📦 Instalar dependencias
+      - name: 📦 Instalar dependencias del proyecto
         run: npm install
-
-      - name: 🔽 Instalar Playwright Browsers
-        run: npx playwright install --with-deps
 
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          # Crear directorios separados para los reportes
+          # Crear directorios para reportes
           mkdir -p playwright-json-report
           mkdir -p playwright-html-report
           
-          # Ejecutar pruebas con reporteros en directorios distintos
+          # Opción 1: Forma recomendada (Playwright 1.25+)
           npx playwright test \
             --reporter=json,html \
             --output=playwright-json-report/json-results.json \
-            --reporter-html=playwright-html-report
+            --reporter-html-output=playwright-html-report || true
           
-          # Procesar el reporte JSON para obtener estadísticas
+          # Opción 2: Fallback si falla la opción anterior
+          if [ ! -f "playwright-json-report/json-results.json" ]; then
+            echo "Usando método alternativo..."
+            npx playwright test --reporter=json,html --output=playwright-json-report/
+            mv playwright-report/* playwright-html-report/ || true
+            rmdir playwright-report || true
+          fi
+
+          # Procesar resultados
           PASSED=$(jq -r '.stats.expected' playwright-json-report/json-results.json || echo 0)
           FAILED=$(jq -r '.stats.unexpected' playwright-json-report/json-results.json || echo 0)
           SKIPPED=$(jq -r '.stats.skipped' playwright-json-report/json-results.json || echo 0)
@@ -57,8 +65,7 @@ jobs:
           echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
           
-          # Mostrar resultados en consola
-          echo "📊 Resultados de las pruebas:"
+          echo "📊 Resultados:"
           echo "✅ Pasadas: $PASSED"
           echo "❌ Fallidas: $FAILED"
           echo "⚠️ Flaky: $FLAKY"
@@ -78,13 +85,13 @@ jobs:
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
           if [ "$FAILED_COUNT" -eq 0 ] && [ "$FLAKY_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📊 Ver detalles]($WORKFLOW_URL)"
+            STATUS_MESSAGE="✅ Todas las pruebas pasaron ($PASSED_COUNT/$TOTAL_COUNT). Ver detalles: $WORKFLOW_URL"
           elif [ "$FAILED_COUNT" -gt 0 ]; then
-            STATUS_MESSAGE="❌ Pruebas fallidas: $FAILED_COUNT/$TOTAL_COUNT (⚠️ Flaky: $FLAKY_COUNT). [🔍 Ver errores]($WORKFLOW_URL)"
+            STATUS_MESSAGE="❌ Fallaron $FAILED_COUNT/$TOTAL_COUNT pruebas (⚠️ $FLAKY_COUNT flaky). Ver errores: $WORKFLOW_URL"
           else
-            STATUS_MESSAGE="⚠️ Pruebas con resultados mixtos: ✅ $PASSED_COUNT | ❌ $FAILED_COUNT | ⚠️ $FLAKY_COUNT [📊 Ver detalles]($WORKFLOW_URL)"
+            STATUS_MESSAGE="⚠️ Resultados mixtos: ✅$PASSED_COUNT ❌$FAILED_COUNT ⚠️$FLAKY_COUNT. Ver detalles: $WORKFLOW_URL"
           fi
           
           curl -X POST -H 'Content-Type: application/json' \
             -d "{\"text\": \"$STATUS_MESSAGE\"}" \
-            "https://chat.googleapis.com/v1/spaces/AAAAOzKWJJQ/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=YFmBV6rljIYSHXdLP2ozpebmaaYRbJFCA-8HezJrGPs"
+            "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
