@@ -31,32 +31,19 @@ jobs:
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          npx playwright test --reporter=html,json --output=playwright-report | tee playwright-output.txt
-          echo "PASSED_COUNT=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
-          echo "FAILED_COUNT=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
-          echo "SKIPPED_COUNT=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
-
-      - name: 🔍 Verificar contenido del reporte
-        run: ls -R playwright-report || echo "No report found"
-
-      - name: 📤 Subir reporte JSON como artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-json-report
-          path: playwright-report/report.json
-
+          npx playwright test | tee playwright-output.txt
+          if grep -q "failed" playwright-output.txt; then
+            echo "TEST_STATUS=FAILED" >> $GITHUB_ENV
+          else
+            echo "TEST_STATUS=SUCCESS" >> $GITHUB_ENV
+          fi
       - name: 📢 Notificar resultados en Google Chat
         run: |
-          PASSED_COUNT=${{ env.PASSED_COUNT }}
-          FAILED_COUNT=${{ env.FAILED_COUNT }}
-          SKIPPED_COUNT=${{ env.SKIPPED_COUNT }}
-          TOTAL_COUNT=$((PASSED_COUNT + FAILED_COUNT + SKIPPED_COUNT))
-          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
-          if [ "$FAILED_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="**Resultado de pruebas Nuevo TRUMP**\n✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📄 Descargar evidencias acá]($ARTIFACT_URL)"
+          if [ "$TEST_STATUS" = "SUCCESS" ]; then
+            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente."
           else
-            STATUS_MESSAGE="**Resultado de pruebas Nuevo TRUMP**\n❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs. [📄 Descargar evidencias acá]($ARTIFACT_URL)"
+            STATUS_MESSAGE="❌ Algunas pruebas fallaron. Revisa los logs."
           fi
           curl -X POST -H 'Content-Type: application/json' \
           -d "{\"text\": \"$STATUS_MESSAGE\"}" \
-          "https://chat.googleapis.com/v1/spaces/AAAAcMep8o0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zAAYHTQ4JdGn_1ZQpIlndJA34vX4aZzjC19QPDNdfJw"
+          "https://chat.googleapis.com/v1/spaces/AAAAOzKWJJQ/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=YFmBV6rljIYSHXdLP2ozpebmaaYRbJFCA-8HezJrGPs"
