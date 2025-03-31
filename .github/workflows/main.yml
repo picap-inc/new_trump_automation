@@ -1,4 +1,4 @@
-name: Trump_Automation
+name: Playwright Tests
 
 on:
   push:
@@ -29,19 +29,12 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: 🚀 Ejecutar pruebas de Playwright
-        id: trump_automation
+        id: test
         run: |
           npx playwright test --reporter=html,json | tee playwright-output.txt
-          PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')
-          FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')
-          SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}')
-          PASSED=${PASSED:-0}
-          FAILED=${FAILED:-0}
-          SKIPPED=${SKIPPED:-0}
-          TOTAL=$((PASSED + FAILED + SKIPPED))
-          echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
-          echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
-          echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
+          echo "PASSED_COUNT=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
+          echo "FAILED_COUNT=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
+          echo "SKIPPED_COUNT=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: 📤 Subir reporte de Playwright como artefacto
         uses: actions/upload-artifact@v4
@@ -51,11 +44,16 @@ jobs:
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
+          PASSED_COUNT=${{ env.PASSED_COUNT }}
+          FAILED_COUNT=${{ env.FAILED_COUNT }}
+          SKIPPED_COUNT=${{ env.SKIPPED_COUNT }}
+          TOTAL_COUNT=$((PASSED_COUNT + FAILED_COUNT + SKIPPED_COUNT))
+
           ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
           if [ "$FAILED_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📄 Descargar evidencias acá]($ARTIFACT_URL)"
+            STATUS_MESSAGE="**Resultado de pruebas Nuevo TRUMP**\n✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📄 Descargar evidencias acá]($ARTIFACT_URL)"
           else
-            STATUS_MESSAGE="❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs. [📄 Descargar evidencias acá]($ARTIFACT_URL)"
+            STATUS_MESSAGE="**Resultado de pruebas Nuevo TRUMP**\n❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs. [📄 Descargar evidencias acá]($ARTIFACT_URL)"
           fi
 
           curl -X POST -H 'Content-Type: application/json' \
