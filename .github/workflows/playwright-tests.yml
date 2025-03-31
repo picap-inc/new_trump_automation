@@ -32,18 +32,19 @@ jobs:
         id: test
         run: |
           npx playwright test | tee playwright-output.txt
-          if grep -q "failed" playwright-output.txt; then
-            echo "TEST_STATUS=FAILED" >> $GITHUB_ENV
-          else
-            echo "TEST_STATUS=SUCCESS" >> $GITHUB_ENV
-          fi
+          PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')
+          FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')
+          TOTAL=$((PASSED + FAILED))
+          echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
+          echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
+          echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
-          if [ "$TEST_STATUS" = "SUCCESS" ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente."
+          if [ "$FAILED_COUNT" -eq 0 ]; then
+            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT)."
           else
-            STATUS_MESSAGE="❌ Algunas pruebas fallaron. Revisa los logs."
+            STATUS_MESSAGE="❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs."
           fi
 
           curl -X POST -H 'Content-Type: application/json' \
