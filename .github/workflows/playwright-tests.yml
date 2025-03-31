@@ -34,6 +34,8 @@ jobs:
           npx playwright test | tee playwright-output.txt
           PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')
           FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
           TOTAL=$((PASSED + FAILED))
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
