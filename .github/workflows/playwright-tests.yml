@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Trump_Automation
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: 🚀 Ejecutar pruebas de Playwright
-        id: test
+        id: trump_automation
         run: |
           npx playwright test --reporter=html,json | tee playwright-output.txt
           PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')
