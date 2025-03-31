@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: {}  # Permite ejecución manual
+  workflow_dispatch:
 
 jobs:
   test:
@@ -17,81 +17,42 @@ jobs:
       - name: 📥 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🏗️ Instalar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: 🔧 Instalar dependencias (jq + browsers)
+      - name: 🏗️ Instalar dependencias (Node.js + Playwright + jq)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          sudo apt-get update && sudo apt-get install -y jq
           npx playwright install --with-deps
-
-      - name: 📦 Instalar dependencias del proyecto
-        run: npm install
+          npm install
 
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          # Crear directorios para reportes
-          mkdir -p playwright-json-report
-          mkdir -p playwright-html-report
-          
-          # Opción 1: Forma recomendada (Playwright 1.25+)
-          npx playwright test \
-            --reporter=json,html \
-            --output=playwright-json-report/json-results.json \
-            --reporter-html-output=playwright-html-report || true
-          
-          # Opción 2: Fallback si falla la opción anterior
-          if [ ! -f "playwright-json-report/json-results.json" ]; then
-            echo "Usando método alternativo..."
-            npx playwright test --reporter=json,html --output=playwright-json-report/
-            mv playwright-report/* playwright-html-report/ || true
-            rmdir playwright-report || true
-          fi
+          mkdir -p playwright-reports
 
-          # Procesar resultados
-          PASSED=$(jq -r '.stats.expected' playwright-json-report/json-results.json || echo 0)
-          FAILED=$(jq -r '.stats.unexpected' playwright-json-report/json-results.json || echo 0)
-          SKIPPED=$(jq -r '.stats.skipped' playwright-json-report/json-results.json || echo 0)
-          FLAKY=$(jq -r '.stats.flaky' playwright-json-report/json-results.json || echo 0)
-          TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
-          
-          echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
-          echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
-          echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
-          echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
-          echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
-          
-          echo "📊 Resultados:"
-          echo "✅ Pasadas: $PASSED"
-          echo "❌ Fallidas: $FAILED"
-          echo "⚠️ Flaky: $FLAKY"
-          echo "⏭ Omitidas: $SKIPPED"
-          echo "📋 Total: $TOTAL"
+          # Ejecutar pruebas con reporte en JSON
+          npx playwright test --reporter=json --output=playwright-reports | tee playwright-output.json
 
-      - name: 📤 Subir reportes como artefactos
+          # Extraer datos de pruebas
+          PASSED=$(jq '[.suites[].specs[].tests[].results[] | select(.status=="passed")] | length' playwright-output.json)
+          FAILED=$(jq '[.suites[].specs[].tests[].results[] | select(.status=="failed")] | length' playwright-output.json)
+          SKIPPED=$(jq '[.suites[].specs[].tests[].results[] | select(.status=="skipped")] | length' playwright-output.json)
+          TOTAL=$((PASSED + FAILED + SKIPPED))
+
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+          echo "SKIPPED=$SKIPPED" >> $GITHUB_ENV
+          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+
+      - name: 📤 Subir reporte JSON
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-reports
-          path: |
-            playwright-html-report/
-            playwright-json-report/
+          name: playwright-json-report
+          path: playwright-output.json
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          if [ "$FAILED_COUNT" -eq 0 ] && [ "$FLAKY_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron ($PASSED_COUNT/$TOTAL_COUNT). Ver detalles: $WORKFLOW_URL"
-          elif [ "$FAILED_COUNT" -gt 0 ]; then
-            STATUS_MESSAGE="❌ Fallaron $FAILED_COUNT/$TOTAL_COUNT pruebas (⚠️ $FLAKY_COUNT flaky). Ver errores: $WORKFLOW_URL"
-          else
-            STATUS_MESSAGE="⚠️ Resultados mixtos: ✅$PASSED_COUNT ❌$FAILED_COUNT ⚠️$FLAKY_COUNT. Ver detalles: $WORKFLOW_URL"
-          fi
-          
+          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED | ❌ Fallidas: $FAILED | ⏭ Omitidas: $SKIPPED | 📊 Total: $TOTAL\n🔗 [Detalles]($WORKFLOW_URL)"
+
           curl -X POST -H 'Content-Type: application/json' \
             -d "{\"text\": \"$STATUS_MESSAGE\"}" \
             "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
