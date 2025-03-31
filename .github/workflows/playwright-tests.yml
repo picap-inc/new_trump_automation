@@ -31,22 +31,31 @@ jobs:
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          npx playwright test | tee playwright-output.txt
+          npx playwright test --reporter=html,json | tee playwright-output.txt
           PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}')
           FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')
+          SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}')
           PASSED=${PASSED:-0}
           FAILED=${FAILED:-0}
-          TOTAL=$((PASSED + FAILED))
+          SKIPPED=${SKIPPED:-0}
+          TOTAL=$((PASSED + FAILED + SKIPPED))
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
 
+      - name: 📤 Subir reporte de Playwright como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report/
+
       - name: 📢 Notificar resultados en Google Chat
         run: |
+          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
           if [ "$FAILED_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT)."
+            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📄 Descargar evidencias acá]($ARTIFACT_URL)"
           else
-            STATUS_MESSAGE="❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs."
+            STATUS_MESSAGE="❌ Algunas pruebas fallaron ($PASSED_COUNT/$TOTAL_COUNT). Revisa los logs. [📄 Descargar evidencias acá]($ARTIFACT_URL)"
           fi
 
           curl -X POST -H 'Content-Type: application/json' \
