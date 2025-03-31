@@ -36,11 +36,11 @@ jobs:
           echo "FAILED_COUNT=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}')" >> $GITHUB_ENV
 
-      - name: 📤 Subir reporte de Playwright como artefacto
+      - name: 📤 Subir reporte JSON como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: playwright-json-report
+          path: playwright-report/*.json
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
