@@ -17,10 +17,13 @@ jobs:
       - name: 📥 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🏗️ Instalar Node.js
+      - name: 🏗️ Instalar Node.js y jq
         uses: actions/setup-node@v4
         with:
           node-version: 18
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
 
       - name: 📦 Instalar dependencias
         run: npm install
@@ -31,42 +34,56 @@ jobs:
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          # Ejecutar pruebas y guardar reporte JSON
-          npx playwright test --reporter=json,html --output=playwright-report/json-results.json
+          # Crear directorios separados para los reportes
+          mkdir -p playwright-json-report
+          mkdir -p playwright-html-report
+          
+          # Ejecutar pruebas con reporteros en directorios distintos
+          npx playwright test \
+            --reporter=json,html \
+            --output=playwright-json-report/json-results.json \
+            --reporter-html=playwright-html-report
           
           # Procesar el reporte JSON para obtener estadísticas
-          PASSED=$(jq -r '.stats.expected' playwright-report/json-results.json || echo 0)
-          FAILED=$(jq -r '.stats.unexpected' playwright-report/json-results.json || echo 0)
-          SKIPPED=$(jq -r '.stats.skipped' playwright-report/json-results.json || echo 0)
-          TOTAL=$((PASSED + FAILED + SKIPPED))
+          PASSED=$(jq -r '.stats.expected' playwright-json-report/json-results.json || echo 0)
+          FAILED=$(jq -r '.stats.unexpected' playwright-json-report/json-results.json || echo 0)
+          SKIPPED=$(jq -r '.stats.skipped' playwright-json-report/json-results.json || echo 0)
+          FLAKY=$(jq -r '.stats.flaky' playwright-json-report/json-results.json || echo 0)
+          TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
           
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
+          echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
           
           # Mostrar resultados en consola
           echo "📊 Resultados de las pruebas:"
           echo "✅ Pasadas: $PASSED"
           echo "❌ Fallidas: $FAILED"
+          echo "⚠️ Flaky: $FLAKY"
           echo "⏭ Omitidas: $SKIPPED"
           echo "📋 Total: $TOTAL"
 
-      - name: 📤 Subir reporte de Playwright como artefacto
+      - name: 📤 Subir reportes como artefactos
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: playwright-reports
+          path: |
+            playwright-html-report/
+            playwright-json-report/
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ARTIFACT_URL="$WORKFLOW_URL/artifacts/${{ github.run_id }}"
+          ARTIFACT_URL="$WORKFLOW_URL"
           
-          if [ "$FAILED_COUNT" -eq 0 ]; then
-            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📄 Ver detalles]($WORKFLOW_URL) | [📦 Descargar reporte]($ARTIFACT_URL)"
+          if [ "$FAILED_COUNT" -eq 0 ] && [ "$FLAKY_COUNT" -eq 0 ]; then
+            STATUS_MESSAGE="✅ Todas las pruebas pasaron exitosamente ($PASSED_COUNT/$TOTAL_COUNT). [📊 Ver detalles]($WORKFLOW_URL)"
+          elif [ "$FAILED_COUNT" -gt 0 ]; then
+            STATUS_MESSAGE="❌ Pruebas fallidas: $FAILED_COUNT/$TOTAL_COUNT (⚠️ Flaky: $FLAKY_COUNT). [🔍 Ver errores]($WORKFLOW_URL)"
           else
-            STATUS_MESSAGE="❌ Pruebas fallidas: $FAILED_COUNT/$TOTAL_COUNT. [🔍 Ver errores]($WORKFLOW_URL) | [📦 Descargar reporte]($ARTIFACT_URL)"
+            STATUS_MESSAGE="⚠️ Pruebas con resultados mixtos: ✅ $PASSED_COUNT | ❌ $FAILED_COUNT | ⚠️ $FLAKY_COUNT [📊 Ver detalles]($WORKFLOW_URL)"
           fi
           
           curl -X POST -H 'Content-Type: application/json' \
