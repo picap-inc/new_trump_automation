@@ -19,44 +19,38 @@ jobs:
 
       - name: 🏗️ Instalar Node.js y dependencias
         run: |
-          sudo apt-get update && sudo apt-get install -y jq
           npm install
           npx playwright install --with-deps
 
       - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          mkdir -p playwright-reports
+          # Ejecutar pruebas y guardar salida en un archivo
+          npx playwright test --reporter=html | tee playwright-output.txt || true
 
-          npx playwright test --reporter=json,html || true
-          
-          mv playwright-report playwright-reports/html || true
-          
-          # Procesar resultados desde el JSON
-          PASSED=$(jq -r '.stats.expected // 0' playwright-report/report.json)
-          FAILED=$(jq -r '.stats.unexpected // 0' playwright-report/report.json)
-          SKIPPED=$(jq -r '.stats.skipped // 0' playwright-report/report.json)
-          FLAKY=$(jq -r '.stats.flaky // 0' playwright-report/report.json)
-          TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
+          # Extraer resultados desde la salida de Playwright
+          PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}' || echo 0)
+          FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}' || echo 0)
+          SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}' || echo 0)
+          TOTAL=$((PASSED + FAILED + SKIPPED))
 
           # Guardar en variables de entorno
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
-          echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
 
-      - name: 📤 Subir reportes como artefactos
+      - name: 📤 Subir reporte HTML como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-reports
-          path: playwright-reports
+          name: playwright-html-report
+          path: playwright-report
 
       - name: 📢 Notificar resultados en Google Chat
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED_COUNT | ❌ Fallidas: $FAILED_COUNT | ⚠️ Flaky: $FLAKY_COUNT | ⏭ Omitidas: $SKIPPED_COUNT | 📊 Total: $TOTAL_COUNT\n🔗 [Detalles]($WORKFLOW_URL)"
+          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED_COUNT | ❌ Fallidas: $FAILED_COUNT | ⏭ Omitidas: $SKIPPED_COUNT | 📊 Total: $TOTAL_COUNT\n🔗 [Detalles]($WORKFLOW_URL)"
 
           curl -X POST -H 'Content-Type: application/json' \
             -d "{\"text\": \"$STATUS_MESSAGE\"}" \
