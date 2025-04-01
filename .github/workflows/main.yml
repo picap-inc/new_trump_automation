@@ -1,13 +1,11 @@
 name: Playwright Tests
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch: {}
+  schedule:
+    - cron: "0 13 * * *"  # 8 AM Colombia
+    - cron: "0 17 * * *"  # 12 PM Colombia
+    - cron: "0 23 * * *"  # 6 PM Colombia
+  workflow_dispatch: {}  # Permite ejecución manual
 
 jobs:
   test:
@@ -17,7 +15,7 @@ jobs:
       - name: 👅 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🏰️ Instalar Node.js y dependencias
+      - name: 🏰 Instalar Node.js y dependencias
         run: |
           npm install
           npx playwright install --with-deps
@@ -27,14 +25,12 @@ jobs:
         run: |
           # Ejecutar pruebas y guardar salida en un archivo
           npx playwright test --reporter=html | tee playwright-output.txt || true
-
           # Extraer resultados desde la salida de Playwright
           PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}' || echo 0)
           FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}' || echo 0)
           SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}' || echo 0)
           FLAKY=$(grep -oE '[0-9]+ flaky' playwright-output.txt | awk '{print $1}' || echo 0)
           TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
-
           # Guardar en variables de entorno
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
@@ -92,7 +88,6 @@ jobs:
           }
           EOF
           )
-
           curl -X POST -H 'Content-Type: application/json' \
             -d "$JSON_PAYLOAD" \
             "https://chat.googleapis.com/v1/spaces/AAAAcMep8o0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zAAYHTQ4JdGn_1ZQpIlndJA34vX4aZzjC19QPDNdfJw"
