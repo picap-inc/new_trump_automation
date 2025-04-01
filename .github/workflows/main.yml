@@ -59,8 +59,7 @@ jobs:
                 "card": {
                   "header": {
                     "title": "🧪 Resultados de pruebas Nuevo TRUMP",
-                    "subtitle": "Resumen de ejecución",
-                    "imageUrl": "https://playwright.dev/img/playwright-logo.svg"
+                    "subtitle": "Resumen de ejecución"
                   },
                   "sections": [
                     {
