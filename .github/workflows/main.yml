@@ -90,4 +90,4 @@ jobs:
           )
           curl -X POST -H 'Content-Type: application/json' \
             -d "$JSON_PAYLOAD" \
-            "https://chat.googleapis.com/v1/spaces/AAAAcMep8o0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zAAYHTQ4JdGn_1ZQpIlndJA34vX4aZzjC19QPDNdfJw"
+            "https://chat.googleapis.com/v1/spaces/AAAAOzKWJJQ/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=YFmBV6rljIYSHXdLP2ozpebmaaYRbJFCA-8HezJrGPs"
