@@ -32,12 +32,14 @@ jobs:
           PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}' || echo 0)
           FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}' || echo 0)
           SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}' || echo 0)
-          TOTAL=$((PASSED + FAILED + SKIPPED))
+          FLAKY=$(grep -oE '[0-9]+ flaky' playwright-output.txt | awk '{print $1}' || echo 0)
+          TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
 
           # Guardar en variables de entorno
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
+          echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
 
       - name: 📤 Subir reporte HTML como artefacto
@@ -50,7 +52,7 @@ jobs:
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED_COUNT | ❌ Fallidas: $FAILED_COUNT | ⏭ Omitidas: $SKIPPED_COUNT | 📊 Total: $TOTAL_COUNT\n🔗 [Detalles]($WORKFLOW_URL)"
+          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED_COUNT | ❌ Fallidas: $FAILED_COUNT | ⚠️ Inestables: $FLAKY_COUNT | ⏭ Omitidas: $SKIPPED_COUNT | 📊 Total: $TOTAL_COUNT\n🔗 [Detalles]($WORKFLOW_URL)"
 
           curl -X POST -H 'Content-Type: application/json' \
             -d "{\"text\": \"$STATUS_MESSAGE\"}" \
