@@ -52,8 +52,49 @@ jobs:
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          STATUS_MESSAGE="🧪 *Pruebas Playwright*\n✅ Pasadas: $PASSED_COUNT | ❌ Fallidas: $FAILED_COUNT | ⚠️ Inestables: $FLAKY_COUNT | ⏭ Omitidas: $SKIPPED_COUNT | 📊 Total: $TOTAL_COUNT\n🔗 [Detalles]($WORKFLOW_URL)"
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "cardsV2": [
+              {
+                "cardId": "results_card",
+                "card": {
+                  "header": {
+                    "title": "🧪 Resultados de pruebas Nuevo TRUMP",
+                    "subtitle": "Resumen de ejecución",
+                    "imageUrl": "https://playwright.dev/img/playwright-logo.svg"
+                  },
+                  "sections": [
+                    {
+                      "widgets": [
+                        {
+                          "textParagraph": {
+                            "text": "✅ Pasadas: *$PASSED_COUNT*  |  ❌ Fallidas: *$FAILED_COUNT*  |  ⚠️ Inestables: *$FLAKY_COUNT*  |  ⏭ Omitidas: *$SKIPPED_COUNT*  |  📊 Total: *$TOTAL_COUNT*"
+                          }
+                        },
+                        {
+                          "buttons": [
+                            {
+                              "textButton": {
+                                "text": "🔍 CONSULTAR EVIDENCIAS",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "$WORKFLOW_URL"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+          EOF
+          )
 
           curl -X POST -H 'Content-Type: application/json' \
-            -d "{\"text\": \"$STATUS_MESSAGE\"}" \
+            -d "$JSON_PAYLOAD" \
             "https://chat.googleapis.com/v1/spaces/AAAAcMep8o0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zAAYHTQ4JdGn_1ZQpIlndJA34vX4aZzjC19QPDNdfJw"
