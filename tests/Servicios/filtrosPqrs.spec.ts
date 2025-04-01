@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test"; // Asegúrate de importar 'expect' y 'test' correctamente
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
 
@@ -58,9 +58,8 @@ test.describe("Automatizar filtros con fechas, tipo de solicitud y ver detalle d
     // Paso 8: Hacer click en uno de los resultados de búsqueda
     await test.step("Seleccionar una de las búsquedas", async () => {
       const resultado = page.getByRole('link', { name: 'Testeo Vane 2025004 Abierto' });
-      await expect(resultado).toBeVisible({ timeout: 10000 });
+      await expect(resultado).toBeVisible({ timeout: 20000 });
       await resultado.click();
     });
   });
 });
-

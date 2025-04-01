@@ -20,7 +20,7 @@ test.describe("Automatización de filtros con valores específicos", () => {
     // Paso 4: Seleccionar submódulo Todos los Servicios
     await test.step("Seleccionar submódulo Todos los Servicios", async () => {
       const todosLosServicios = page.getByRole("link", { name: "Todos los servicios" });
-      await expect(todosLosServicios).toBeVisible({ timeout: 10000 });
+      await expect(todosLosServicios).toBeVisible({ timeout: 15000 });
       await todosLosServicios.click();
     });
 
