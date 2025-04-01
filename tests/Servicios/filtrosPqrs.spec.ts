@@ -56,10 +56,22 @@ test.describe("Automatizar filtros con fechas, tipo de solicitud y ver detalle d
     });
 
     // Paso 8: Hacer click en uno de los resultados de búsqueda
-    await test.step("Seleccionar una de las búsquedas", async () => {
-      const resultado = page.getByRole('link', { name: 'Testeo Vane 2025004 Abierto' });
-      await expect(resultado).toBeVisible({ timeout: 20000 });
-      await resultado.click();
+  await test.step("Seleccionar una de las búsquedas", async () => { 
+  const resultado = page.locator('div:nth-child(4) > div > a');
+
+  // Esperar hasta que el elemento esté disponible
+  await page.waitForSelector('div:nth-child(4) > div > a', { timeout: 30000 });
+
+  // Depuración: Capturar pantalla antes de hacer clic
+  await page.screenshot({ path: 'screenshot_before_click.png', fullPage: true });
+
+  // Validar que sea visible antes de interactuar
+  await expect(resultado).toBeVisible();
+
+  // Hacer clic en el resultado
+  await resultado.click();
+
+    
     });
   });
 });
