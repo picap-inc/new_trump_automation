@@ -54,7 +54,7 @@ jobs:
                 "cardId": "results_card",
                 "card": {
                   "header": {
-                    "title": "🧪 Resultados de pruebas Nuevo TRUMP",
+                    "title": "🕵️ Resultados de pruebas Nuevo TRUMP",
                     "subtitle": "Resumen de ejecución"
                   },
                   "sections": [
