@@ -7,105 +7,93 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: {}  # Permite ejecución manual
+  workflow_dispatch: {}
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout del repositorio
+      - name: 👅 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🏗️ Instalar Node.js y dependencias necesarias
+      - name: 🏰️ Instalar Node.js y dependencias
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          npm install
           npx playwright install --with-deps
 
-      - name: 📦 Instalar dependencias del proyecto
-        run: npm install
-
-      - name: 🚀 Ejecutar pruebas de Playwright con capturas de pantalla
+      - name: 🚀 Ejecutar pruebas de Playwright
         id: test
         run: |
-          # Crear directorios para reportes y screenshots
-          mkdir -p playwright-html-report screenshots
+          # Ejecutar pruebas y guardar salida en un archivo
+          npx playwright test --reporter=html | tee playwright-output.txt || true
 
-          # Ejecutar pruebas y capturar JSON + HTML
-          npx playwright test --reporter=json,html --output=playwright-html-report || true
-
-          # Extraer resultados del JSON generado
-          RESULTS_JSON=$(find playwright-html-report -name "*.json" | head -n 1)
-          PASSED=$(jq '.suites | map(.specs | map(select(.tests[].results[].status == "passed"))) | flatten | length' "$RESULTS_JSON" || echo 0)
-          FAILED=$(jq '.suites | map(.specs | map(select(.tests[].results[].status == "failed"))) | flatten | length' "$RESULTS_JSON" || echo 0)
-          SKIPPED=$(jq '.suites | map(.specs | map(select(.tests[].results[].status == "skipped"))) | flatten | length' "$RESULTS_JSON" || echo 0)
-          FLAKY=$(jq '.suites | map(.specs | map(select(.tests[].results[].status == "flaky"))) | flatten | length' "$RESULTS_JSON" || echo 0)
+          # Extraer resultados desde la salida de Playwright
+          PASSED=$(grep -oE '[0-9]+ passed' playwright-output.txt | awk '{print $1}' || echo 0)
+          FAILED=$(grep -oE '[0-9]+ failed' playwright-output.txt | awk '{print $1}' || echo 0)
+          SKIPPED=$(grep -oE '[0-9]+ skipped' playwright-output.txt | awk '{print $1}' || echo 0)
+          FLAKY=$(grep -oE '[0-9]+ flaky' playwright-output.txt | awk '{print $1}' || echo 0)
           TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
 
+          # Guardar en variables de entorno
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
           echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
 
-          echo "📊 Resultados:"
-          echo "✅ Pasadas: $PASSED"
-          echo "❌ Fallidas: $FAILED"
-          echo "⚠️ Flaky: $FLAKY"
-          echo "⏭ Omitidas: $SKIPPED"
-          echo "📋 Total: $TOTAL"
-
-      - name: 📤 Subir reportes y capturas como artefactos
+      - name: 👄 Subir reporte HTML como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-reports
-          path: |
-            playwright-html-report/
-            screenshots/
+          name: playwright-html-report
+          path: playwright-report
 
-      - name: 📢 Notificar resultados en Google Chat con botón
+      - name: 📢 Notificar resultados en Google Chat
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          curl -X POST -H 'Content-Type: application/json' \
-            -d '{
-              "cardsV2": [
-                {
-                  "cardId": "resultados_pruebas",
-                  "card": {
-                    "header": {
-                      "title": "✅ Resultados de pruebas Nuevo TRUMP"
-                    },
-                    "sections": [
-                      {
-                        "widgets": [
-                          {
-                            "textParagraph": {
-                              "text": "✅ Pasadas: '${{ env.PASSED_COUNT }}' | ❌ Fallidas: '${{ env.FAILED_COUNT }}' | ⚠️ Flaky: '${{ env.FLAKY_COUNT }}' | ⏭ Omitidas: '${{ env.SKIPPED_COUNT }}' | 📊 Total: '${{ env.TOTAL_COUNT }}'"
-                            }
-                          },
-                          {
-                            "buttonList": {
-                              "buttons": [
-                                {
-                                  "textButton": {
-                                    "text": "📄 Consultar evidencias",
-                                    "onClick": {
-                                      "openLink": {
-                                        "url": "'"$WORKFLOW_URL"'"
-                                      }
-                                    }
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "cardsV2": [
+              {
+                "cardId": "results_card",
+                "card": {
+                  "header": {
+                    "title": "🧪 Resultados de pruebas Nuevo TRUMP",
+                    "subtitle": "Resumen de ejecución",
+                    "imageUrl": "https://playwright.dev/img/playwright-logo.svg"
+                  },
+                  "sections": [
+                    {
+                      "widgets": [
+                        {
+                          "textParagraph": {
+                            "text": "✅ Pasadas: *$PASSED_COUNT*  |  ❌ Fallidas: *$FAILED_COUNT*  |  ⚠️ Inestables: *$FLAKY_COUNT*  |  ⏭ Omitidas: *$SKIPPED_COUNT*  |  📊 Total: *$TOTAL_COUNT*"
+                          }
+                        },
+                        {
+                          "buttonList": {
+                            "buttons": [
+                              {
+                                "text": "🔍 CONSULTAR EVIDENCIAS",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "$WORKFLOW_URL"
                                   }
                                 }
-                              ]
-                            }
+                              }
+                            ]
                           }
-                        ]
-                      }
-                    ]
-                  }
+                        }
+                      ]
+                    }
+                  ]
                 }
-              ]
-            }' \
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-Type: application/json' \
+            -d "$JSON_PAYLOAD" \
             "https://chat.googleapis.com/v1/spaces/AAAAcMep8o0/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zAAYHTQ4JdGn_1ZQpIlndJA34vX4aZzjC19QPDNdfJw"
