@@ -62,7 +62,7 @@ jobs:
                       "widgets": [
                         {
                           "textParagraph": {
-                            "text": "✅ Pasadas: *$PASSED_COUNT*  |  ❌ Fallidas: *$FAILED_COUNT*  |  ⚠️ Inestables: *$FLAKY_COUNT*  |  ⏭ Omitidas: *$SKIPPED_COUNT*  |  📊 Total: *$TOTAL_COUNT*"
+                            "text": "✅ Satisfactorias: *$PASSED_COUNT*  |  ❌ Fallidas: *$FAILED_COUNT*  |  ⚠️ Inestables: *$FLAKY_COUNT*  |  ⏭ Omitidas: *$SKIPPED_COUNT*  |  📊 Total: *$TOTAL_COUNT*"
                           }
                         },
                         {
