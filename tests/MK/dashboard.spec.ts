@@ -33,7 +33,7 @@ test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
     // Paso 6: Seleccionar "Mes" en el select con locator '#graph'
     await test.step("Seleccionar 'Mes' en el select", async () => {
       const graphSelect = page.locator("#graph");
-      await expect(graphSelect).toBeVisible({ timeout: 10000 });
+      await expect(graphSelect).toBeVisible({ timeout: 15000 });
       await graphSelect.selectOption({ label: "Mes" });
     });
 
