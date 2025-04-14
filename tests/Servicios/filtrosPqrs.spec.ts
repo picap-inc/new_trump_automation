@@ -57,10 +57,10 @@ test.describe("Automatizar filtros con fechas, tipo de solicitud y ver detalle d
 
     // Paso 8: Hacer click en uno de los resultados de búsqueda
   await test.step("Seleccionar una de las búsquedas", async () => { 
-  const resultado = page.locator('div:nth-child(4) > div > a');
+  const resultado = page.locator('div:nth-child(5) > div > a').first();
 
   // Esperar hasta que el elemento esté disponible
-  await page.waitForSelector('div:nth-child(4) > div > a', { timeout: 30000 });
+  await page.waitForSelector('div:nth-child(5) > div > a', { timeout: 30000 });
 
   // Depuración: Capturar pantalla antes de hacer clic
   await page.screenshot({ path: 'screenshot_before_click.png', fullPage: true });

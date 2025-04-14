@@ -39,7 +39,7 @@ test.describe("Mover card de Cerrado a Reconsideración", () => {
     // Paso 7: Mover la card "Testeo 2" a Reconsideración
     await test.step("Mover card de Cerrado a Reconsideración", async () => {
       const cardCerrado = page.locator("a:has-text('Testeo 2')").first();
-      const columnaReconsideracion = page.locator("#pqrs_list > .grid > div:nth-child(4)"); // Ajusta si es necesario
+      const columnaReconsideracion = page.locator("#pqrs_list > .grid > div:nth-child(5)"); // Ajusta si es necesario
 
       await expect(cardCerrado).toBeVisible({ timeout: 10000 });
       await expect(columnaReconsideracion).toBeVisible({ timeout: 10000 });
@@ -55,7 +55,7 @@ test.describe("Mover card de Cerrado a Reconsideración", () => {
 
     // Paso 8: Verificar que la card se movió a Reconsideración
     await test.step("Verificar que la card está en Reconsideración", async () => {
-      const cardReconsideracion = page.locator("#pqrs_list > .grid > div:nth-child(4)");
+      const cardReconsideracion = page.locator("#pqrs_list > .grid > div:nth-child(5)");
       await expect(cardReconsideracion).toContainText("Testeo 2");
     });
   });
