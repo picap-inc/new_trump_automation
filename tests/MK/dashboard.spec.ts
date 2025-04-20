@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
 
+
 test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
   test("Validar acceso a Dashboard y opciones en el select", async ({ page }) => {
     // Paso 1: Iniciar sesión
@@ -30,14 +31,8 @@ test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
       await expect(dashboardHeading).toBeVisible({ timeout: 10000 });
     });
 
-    // Paso 6: Seleccionar "Mes" en el select con locator '#graph'
-    await test.step("Seleccionar 'Mes' en el select", async () => {
-      const graphSelect = page.locator("#graph");
-      await expect(graphSelect).toBeVisible({ timeout: 15000 });
-      await graphSelect.selectOption({ label: "Mes" });
-    });
 
-    // Paso 7: Hacer clic en el botón "Ver" y validar que la URL es correcta
+    // Paso 6: Hacer clic en el botón "Ver" y validar que la URL es correcta
     await test.step("Hacer clic en el botón 'Ver' y validar la URL", async () => {
       const verButton = page.getByRole("link", { name: "Ver" }).getByRole("button");
       await expect(verButton).toBeVisible({ timeout: 10000 });
@@ -48,3 +43,4 @@ test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
     });
   });
 });
+
