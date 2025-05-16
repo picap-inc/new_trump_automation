@@ -75,10 +75,6 @@ test.describe("Sub módulo Marketing y Growth", () => {
 
 
 
-     
-
-
-
     })
   })
 });
