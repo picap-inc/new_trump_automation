@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Validar el login de trumpDev", () => {
   test("Completar el login con email y contraseña válidos", async ({ page }) => {
     // Paso 1: Navegar a la página de login
-    await test.step("Abrir la página de TrumpDev", async () => {
+    await test.step("Abrir la página de TrumpProduccion", async () => {
       await page.goto("https://admin.picap.io/");
     });
 
