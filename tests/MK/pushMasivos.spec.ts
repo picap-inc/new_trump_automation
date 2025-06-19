@@ -1,67 +1,66 @@
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
+import { capturarPaso } from "../utils/capturas"; 
 
-test.describe("Valdiacion de push masivas", () => {
+test.describe("Validación de push masivas", () => {
   test("Validar la página y sus respectivas funciones", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await login(page);
 
-    // Paso 2: Abrir el menú lateral
-    await Barra(page);
+    await test.step("Iniciar sesión", async () => {
+      await login(page);
+      await capturarPaso(page, "01_login", "push_masivos");
+    });
 
-    // Paso 3: Hacer clic en "Marketing y Growth"
+    await test.step("Abrir menú lateral", async () => {
+      await Barra(page);
+      await capturarPaso(page, "02_barra", "push_masivos");
+    });
+
     await test.step("Seleccionar módulo Marketing y Growth", async () => {
       const marketingModule = page.getByText("Marketing y growth");
       await expect(marketingModule).toBeVisible({ timeout: 10000 });
       await marketingModule.click();
+      await capturarPaso(page, "03_marketing_growth", "push_masivos");
+    });
 
-      // Paso 4: Hacer click en "Push Masivos"
-      await test.step("Hacer click en Push Masivos", async () => {
-        const PushMasive = page.getByRole('link', { name: 'Push masivos' });
-        await expect(PushMasive).toBeVisible({ timeout: 10000 });
-        await PushMasive.click();
+    await test.step("Hacer click en Push Masivos", async () => {
+      const PushMasive = page.getByRole('link', { name: 'Push masivos' });
+      await expect(PushMasive).toBeVisible({ timeout: 10000 });
+      await PushMasive.click();
+      await capturarPaso(page, "04_push_masivos", "push_masivos");
+    });
 
-        // Paso 5: Crear un Push Masivo de prueba con pausas
-        await test.step("Crear un Push Masivo de prueba", async () => {
-          // Esperar que el botón esté visible y dar click
-          const nuevoPushBtn = page.getByRole('button', { name: 'Nuevo push masivo' });
-          await expect(nuevoPushBtn).toBeVisible({ timeout: 15000 });
-          await nuevoPushBtn.click();
+    await test.step("Crear un Push Masivo de prueba", async () => {
+      const nuevoPushBtn = page.getByRole('button', { name: 'Nuevo push masivo' });
+      await expect(nuevoPushBtn).toBeVisible({ timeout: 15000 });
+      await nuevoPushBtn.click();
+      await page.waitForTimeout(2000);
+      await capturarPaso(page, "05_formulario_abierto", "push_masivos");
 
-          // Esperar que el formulario cargue (puede tardar)
-          await page.waitForTimeout(2000); // Espera de 2 segundos
+      const tipoPush = page.getByLabel('Tipo push');
+      await expect(tipoPush).toBeVisible();
+      await tipoPush.selectOption({ label: 'Push Masiva' });
+      await page.waitForTimeout(1000);
 
-          // Seleccionar "Push Masiva"
-          const tipoPush = page.getByLabel('Tipo push');
-          await expect(tipoPush).toBeVisible();
-          await tipoPush.selectOption({ label: 'Push Masiva' });
-          await page.waitForTimeout(1000); // Espera de 1 segundo
+      const titulo = page.getByLabel('Título');
+      await expect(titulo).toBeVisible();
+      await titulo.type('prueba qa automatizada', { delay: 100 });
 
-          // Escribir el título lentamente
-          const titulo = page.getByLabel('Título');
-          await expect(titulo).toBeVisible();
-          await titulo.type('prueba qa automatizada', { delay: 100 });
-          await page.waitForTimeout(1000);
+      const tipoEnvio = page.getByLabel('Tipo de envío');
+      await expect(tipoEnvio).toBeVisible();
+      await tipoEnvio.selectOption({ label: 'Envío inmediato' });
+      await page.waitForTimeout(1000);
 
-          // Seleccionar "Envío inmediato"
-          const tipoEnvio = page.getByLabel('Tipo de envío');
-          await expect(tipoEnvio).toBeVisible();
-          await tipoEnvio.selectOption({ label: 'Envío inmediato' });
-          await page.waitForTimeout(1000);
+      const textoPush = page.getByRole('textbox', { name: 'Texto push' });
+      await expect(textoPush).toBeVisible();
+      await textoPush.type('esto es una prueba qa de automatizacion', { delay: 80 });
 
-          // Escribir texto push lentamente
-          const textoPush = page.getByRole('textbox', { name: 'Texto push' });
-          await expect(textoPush).toBeVisible();
-          await textoPush.type('esto es una prueba qa de automatizacion', { delay: 80 });
-          await page.waitForTimeout(1500);
+      await capturarPaso(page, "06_formulario_lleno", "push_masivos");
 
-          // Click en "Cancelar"
-          const cancelarBtn = page.getByRole('button', { name: 'Cancelar' });
-          await expect(cancelarBtn).toBeVisible();
-          await cancelarBtn.click();
-        });
-      });
+      const cancelarBtn = page.getByRole('button', { name: 'Cancelar' });
+      await expect(cancelarBtn).toBeVisible();
+      await cancelarBtn.click();
+      await capturarPaso(page, "07_formulario_cancelado", "push_masivos");
     });
   });
 });

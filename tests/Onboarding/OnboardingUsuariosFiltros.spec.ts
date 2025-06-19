@@ -1,80 +1,79 @@
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login"; 
 import { Barra } from "../utils/Barra";
+import { capturarPaso } from "../utils/capturas"; 
 
 test.describe("Validación de Onboarding Dashboard", () => {
   test("Validar la página, filtros y exportación de listado", async ({ page }) => {
-    // Aumentar el timeout a 60 segundos para este test
-    test.setTimeout(60000);
+    test.setTimeout(60000); 
 
-    // Paso 1: Iniciar sesión
-    await login(page);
+    await test.step("Iniciar sesión", async () => {
+      await login(page);
+      await capturarPaso(page, "01_login");
+    });
 
-    // Paso 2: Abrir el menú lateral
-    await Barra(page);
+    await test.step("Abrir menú lateral", async () => {
+      await Barra(page);
+      await capturarPaso(page, "02_menu_lateral");
+    });
 
-    // Paso 3: Hacer clic en el módulo Onboarding para desplegar el menú
-    await page.getByText('Onboarding', { exact: true }).click();
+    await test.step("Desplegar módulo Onboarding", async () => {
+      await page.getByText('Onboarding', { exact: true }).click();
+      await capturarPaso(page, "03_desplegar_onboarding");
+    });
 
-    // Paso 4: Esperar a que aparezca el enlace "Usuarios onboarding"
-    await page.waitForSelector('text= Usuarios onboarding', { state: 'visible' });
+    await test.step("Esperar enlace 'Usuarios onboarding'", async () => {
+      await page.waitForSelector('text= Usuarios onboarding', { state: 'visible' });
+      await capturarPaso(page, "04_enlace_usuarios_onboarding");
+    });
 
-    // Paso 5: Hacer clic en Onboarding Usuarios
-    await page.getByRole('link', { name: 'Usuarios onboarding' }).click();
+    await test.step("Ir a Usuarios onboarding", async () => {
+      await page.getByRole('link', { name: 'Usuarios onboarding' }).click();
+      await page.waitForURL("https://admin.picap.io/onboardings", { timeout: 15000 });
+      await expect(page).toHaveURL("https://admin.picap.io/onboardings");
+      await capturarPaso(page, "05_pagina_usuarios_onboarding");
+    });
 
-    // Paso 6: Esperar a que la nueva URL cargue
-    await page.waitForURL("https://admin.picap.io/onboardings", { timeout: 15000 });
-
-
-    // Paso 7: Validar que la página cargó correctamente
-    await expect(page).toHaveURL("https://admin.picap.io/onboardings");
-
-    // Paso 8: Seleccionar país (Colombia)
     await test.step("Seleccionar país Colombia", async () => {
       const paisSelect = page.locator('#country');
       await expect(paisSelect).toBeVisible();
       await paisSelect.selectOption({ label: 'Colombia' });
+      await capturarPaso(page, "06_pais_colombia");
     });
 
-    // Paso 9: Seleccionar ciudad (Armenia) usando el teclado
     await test.step("Seleccionar ciudad Armenia usando teclado", async () => {
       const ciudadSelect = page.locator('#city');
       await expect(ciudadSelect).toBeVisible();
-
-      // Hacemos clic en el campo de ciudad para enfocarlo
       await ciudadSelect.click();
-
-      // Simulamos presionar la letra 'A' para filtrar la ciudad
       await page.keyboard.press('A');
-
-      // Ahora presionamos 'Enter' para seleccionar (por ejemplo, Bogotá)
       await page.keyboard.press('Enter');
+      await capturarPaso(page, "07_ciudad_armenia");
     });
 
-    // Paso 10: Seleccionar tipo de vehículo
     await test.step("Seleccionar tipo de vehículo", async () => {
       const vehicleSelect = page.locator('#vehicle_type');
       await expect(vehicleSelect).toBeVisible();
-      await vehicleSelect.selectOption({ label: 'Carro' }); 
+      await vehicleSelect.selectOption({ label: 'Carro' });
+      await capturarPaso(page, "08_tipo_vehiculo_carro");
     });
 
-    // Paso 11: Hacer clic en el botón "Buscar"
     await test.step("Hacer clic en el botón Buscar", async () => {
       const buscarButton = page.getByRole('button', { name: 'Buscar' });
       await expect(buscarButton).toBeVisible();
       await buscarButton.click();
+      await capturarPaso(page, "09_busqueda_realizada");
     });
 
-    // Paso 12: Esperar 15 segundos para que la búsqueda se refleje
-    await test.step("Esperar 15 segundos para que la búsqueda se refleje", async () => {
-      await page.waitForTimeout(15000); // Esperamos 15 segundos
+    await test.step("Esperar 15 segundos para reflejar búsqueda", async () => {
+      await page.waitForTimeout(15000);
+      await capturarPaso(page, "10_resultados_cargados");
     });
 
-    // Paso 13: Hacer clic en el botón "Exportar listado"
-    await test.step("Hacer clic en el botón Exportar listado", async () => {
+    await test.step("Exportar listado", async () => {
       const exportButton = page.getByRole('link', { name: 'Exportar listado' });
       await expect(exportButton).toBeVisible();
       await exportButton.click();
+      await capturarPaso(page, "11_exportar_listado");
     });
   });
 });

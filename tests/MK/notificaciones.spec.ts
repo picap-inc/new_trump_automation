@@ -1,80 +1,85 @@
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
+import { capturarPaso } from "../utils/capturas"; 
 
 test.describe("Sub módulo Marketing y Growth", () => {
-    test("Validar pagina notificaciones y sus funciones", async ({ page }) => {
-        const URL_NOTIFICACIONES = "https://admin.picap.io/notifications";
+  test("Validar página Notificaciones y sus funciones", async ({ page }) => {
+    const URL_NOTIFICACIONES = "https://admin.picap.io/notifications";
 
-        //Paso 1: Iniciar sesion 
-        await login(page);
+    await test.step("Login en la plataforma", async () => {
+      await login(page);
+      await capturarPaso(page, "01_login", "marketing-notificaciones");
+    });
 
-        //Paso 2: Abrir el menu lateral
-        await Barra(page);
+    await test.step("Abrir barra lateral", async () => {
+      await Barra(page);
+      await capturarPaso(page, "02_barra", "marketing-notificaciones");
+    });
 
-        //Paso 3: Hacer click en el modulo  "Marketing y Growth"
-        const marketingModule = page.getByText("Marketing y growth");
-        await expect(marketingModule).toBeVisible({ timeout: 1000 });
-        marketingModule.click();
+    await test.step("Click en módulo Marketing y Growth", async () => {
+      const marketingModule = page.getByText("Marketing y growth");
+      await expect(marketingModule).toBeVisible({ timeout: 1000 });
+      await marketingModule.click();
+      await capturarPaso(page, "03_marketing", "marketing-notificaciones");
+    });
 
-        //Paso 4: Hacer click en nofiticaciones
-        const notificacionesLink = page.getByRole('link', { name: 'Notificaciones' });
-        await expect(notificacionesLink).toBeVisible({ timeout: 10000});
-        await notificacionesLink.click();
+    await test.step("Click en Notificaciones", async () => {
+      const notificacionesLink = page.getByRole("link", { name: "Notificaciones" });
+      await expect(notificacionesLink).toBeVisible({ timeout: 10000 });
+      await notificacionesLink.click();
+      await expect(page).toHaveURL(URL_NOTIFICACIONES, { timeout: 5000 });
+      await capturarPaso(page, "04_notificaciones_url", "marketing-notificaciones");
+    });
 
-        //Paso 5: Validar que la pagina de Notificaciones cargo correctamente
-        await expect(page).toHaveURL(URL_NOTIFICACIONES, { timeout: 5000 });
+    await test.step("Aplicar filtro de fechas y buscar", async () => {
+      const desdeInput = page.getByRole("textbox", { name: "Desde" });
+      await expect(desdeInput).toBeVisible();
+      await desdeInput.fill("2025-03-01");
 
-        //Paso 6: Rellenar campo "Desde" con fecha
-        const  desdeInput = page.getByRole('textbox', { name: 'Desde' });
-        await expect(desdeInput).toBeVisible({ timeout: 10000 });
-        await desdeInput.fill("2025-03-01")
+      const hastaInput = page.getByRole("textbox", { name: "Hasta" });
+      await expect(hastaInput).toBeVisible();
+      const currentDate = new Date().toISOString().split("T")[0];
+      await hastaInput.fill(currentDate);
 
-        //Paso 7: Rellenar campo "Hasta" con fecha  actual
-        const hastaInput = page.getByRole('textbox', { name: 'Hasta' });
-        await expect(hastaInput).toBeVisible({ timeout: 10000 });
-        const currentDate = new Date().toISOString().split('T')[0];
-        await hastaInput.fill(currentDate);
+      const buscarButton = page.getByRole("button", { name: "Buscar" });
+      await expect(buscarButton).toBeVisible();
+      await buscarButton.click();
 
-        //Paso 8: Hacer click en boton buscar
-        const buscarButton = page.getByRole('button', { name: 'Buscar' });
-        await expect(buscarButton).toBeVisible({ timeout: 10000 });
-        await buscarButton.click();
+      await page.waitForTimeout(3000);
+      await capturarPaso(page, "05_filtro_busqueda", "marketing-notificaciones");
+    });
 
-         // Paso 9: Esperar a que la búsqueda se muestre
-        await test.step("Esperar a que se cargue la búsqueda", async () => {
-        await page.waitForTimeout(3000); 
-      
-  
-        //Paso 10: Hacer click en limpiar 
-        const limpiarButton = page.getByRole('button', { name: 'Limpiar' });
-        await expect(limpiarButton).toBeVisible({ timeout: 10000});
-        await limpiarButton.click();
+    await test.step("Limpiar filtros y aplicar búsqueda por estado/título", async () => {
+      const limpiarButton = page.getByRole("button", { name: "Limpiar" });
+      await expect(limpiarButton).toBeVisible();
+      await limpiarButton.click();
 
-        //Paso 11: Seleccionar Estado 'Deshabilitado' con teclado y Escribir Tu Pipro NO ha podido renovarse
-        await page.locator('#status_cd').selectOption({ label: 'Deshabilitado' });
-        const escribir = page.getByRole('textbox', { name: 'Título' });
-        await expect(escribir).toBeVisible();
-        await escribir.fill("Tu Pipro NO ha podido renovarse");
+      await page.locator("#status_cd").selectOption({ label: "Deshabilitado" });
+      const titulo = page.getByRole("textbox", { name: "Título" });
+      await expect(titulo).toBeVisible();
+      await titulo.fill("Tu Pipro NO ha podido renovarse");
 
-        //Paso 12: Dar click en buscar
-        const buscarButton = page.getByRole('button', { name: 'Buscar' });
-        await expect(buscarButton).toBeVisible({ timeout: 10000 });
-        await buscarButton.click();
+      const buscarButton = page.getByRole("button", { name: "Buscar" });
+      await expect(buscarButton).toBeVisible();
+      await buscarButton.click();
 
-        //Paso 13: Dar click en Crear nueva notificacion y llenar campos
-        const clickNotis = page.getByRole('button', { name: 'Crear nueva notificación' });
-        await expect(clickNotis).toBeVisible({ timeout:10000 });
-        await clickNotis.click();
-        await page.getByLabel('Título').fill("Prueba QA");
-        await page.getByRole('textbox', { name: 'Descripción' }).fill("Automation QA");
+      await capturarPaso(page, "06_filtrado_estado_titulo", "marketing-notificaciones");
+    });
 
-        //Paso 14: Dar click en cancelar 
-        await page.getByRole('button', { name: 'Cancelar' }).scrollIntoViewIfNeeded();
-        await page.getByRole('button', { name: 'Cancelar' }).click(); 
+    await test.step("Crear nueva notificación y cancelar", async () => {
+      const crearBtn = page.getByRole("button", { name: "Crear nueva notificación" });
+      await expect(crearBtn).toBeVisible();
+      await crearBtn.click();
 
+      await page.getByLabel("Título").fill("Prueba QA");
+      await page.getByRole("textbox", { name: "Descripción" }).fill("Automation QA");
 
+      const cancelarBtn = page.getByRole("button", { name: "Cancelar" });
+      await cancelarBtn.scrollIntoViewIfNeeded();
+      await cancelarBtn.click();
 
-    })
-  })
+      await capturarPaso(page, "07_crear_cancelar", "marketing-notificaciones");
+    });
+  });
 });

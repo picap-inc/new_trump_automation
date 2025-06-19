@@ -1,76 +1,71 @@
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
+import { capturarPaso } from "../utils/capturas"; 
 
 test.describe("Sub módulo Marketing y Growth", () => {
-  test("Validar acceso a codigos masivos y sus respectivas funciones", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await login(page);
+  test("Validar acceso a Códigos Masivos y sus respectivas funciones", async ({ page }) => {
+    
+    await test.step("Login en la plataforma", async () => {
+      await login(page);
+      await capturarPaso(page, "01_login_exitoso", "codigos-masivos");
+    });
 
-    // Paso 2: Abrir el menú lateral
-    await Barra(page);
+    await test.step("Abrir menú lateral", async () => {
+      await Barra(page);
+      await capturarPaso(page, "02_barra_lateral_abierta", "codigos-masivos");
+    });
 
-    // Paso 3: Hacer clic en el módulo "Marketing y Growth"
     await test.step("Seleccionar módulo Marketing y Growth", async () => {
       const marketingModule = page.getByText("Marketing y growth");
       await expect(marketingModule).toBeVisible({ timeout: 10000 });
       await marketingModule.click();
+      await capturarPaso(page, "03_click_marketing_growth", "codigos-masivos");
     });
 
-    // Paso 4: Poner el cursor sobre "Códigos promocionales"
     await test.step("Hover sobre Códigos Promocionales", async () => {
-        await page.getByText("Códigos promocionales").first().hover();
-      });
+      const codigos = page.getByText("Códigos promocionales").first();
+      await expect(codigos).toBeVisible({ timeout: 10000 });
+      await codigos.hover();
+      await capturarPaso(page, "04_hover_codigos_promocionales", "codigos-masivos");
+    });
 
-    // Paso 5: Hacer click en "Codigos masivos"
     await test.step("Seleccionar Códigos masivos", async () => {
-        const codigosMasivos = page.getByRole('link', { name: 'Códigos masivos' });
-        await expect(codigosMasivos).toBeVisible({ timeout: 5000 });
-        await codigosMasivos.click();
+      const codigosMasivos = page.getByRole('link', { name: 'Códigos masivos' });
+      await expect(codigosMasivos).toBeVisible({ timeout: 5000 });
+      await codigosMasivos.click();
+      await capturarPaso(page, "05_click_codigos_masivos", "codigos-masivos");
+    });
 
-    // Paso 6: Escribir en el campo "Nombre" y buscar
     await test.step("Buscar y limpiar en Códigos masivos", async () => {
-    // Localizar el campo de texto y escribir "PRUEBASQA"
-    const inputNombre = page.getByRole('textbox', { name: 'Nombre' });
-    await expect(inputNombre).toBeVisible({ timeout: 5000 });
-    await inputNombre.fill("PRUEBASQA");
-  
-    // Hacer clic en "Buscar"
-    const botonBuscar = page.getByRole('button', { name: 'Buscar' });
-    await expect(botonBuscar).toBeVisible();
-    await botonBuscar.click();
-  
-    // Esperar 3 segundos para ver los resultados
-    await page.waitForTimeout(3000);
-  
-    // Hacer clic en "Limpiar"
-    const botonLimpiar = page.getByRole('button', { name: 'Limpiar' });
-    await expect(botonLimpiar).toBeVisible();
-    await botonLimpiar.click();
-  
-    // Esperar 4 segundos para que la página cargue completamente después de limpiar
-    await page.waitForTimeout(4000);
-  });
+      const inputNombre = page.getByRole('textbox', { name: 'Nombre' });
+      await expect(inputNombre).toBeVisible({ timeout: 5000 });
+      await inputNombre.fill("PRUEBASQA");
 
-   // Paso 7: Seleccionar "Finalizado" en el campo select y buscar nuevamente
-    await test.step("Filtrar por estado 'Finalizado' usando el teclado y buscar", async () => {
-    // Localizar el campo select y hacer clic para abrir las opciones
-    const selectEstado = page.locator('#code_status');
-    await expect(selectEstado).toBeVisible({ timeout: 5000 });
-    await selectEstado.click();
-  
-    // Escribir "F" para filtrar la opción "Finalizado"
-    await page.keyboard.press('F');
-  
-    // Confirmar la selección con Enter
-    await page.keyboard.press('Enter');
-  
-    // Hacer clic en "Buscar" nuevamente
-    const botonBuscar = page.getByRole('button', { name: 'Buscar' });
-    await expect(botonBuscar).toBeVisible();
-    await botonBuscar.click();
-  });
-  
-      });
+      const botonBuscar = page.getByRole('button', { name: 'Buscar' });
+      await expect(botonBuscar).toBeVisible();
+      await botonBuscar.click();
+      await page.waitForTimeout(3000);
+      await capturarPaso(page, "06_busqueda_por_nombre", "codigos-masivos");
+
+      const botonLimpiar = page.getByRole('button', { name: 'Limpiar' });
+      await expect(botonLimpiar).toBeVisible();
+      await botonLimpiar.click();
+      await page.waitForTimeout(4000);
+      await capturarPaso(page, "07_busqueda_limpiada", "codigos-masivos");
+    });
+
+    await test.step("Filtrar por estado 'Finalizado' y buscar", async () => {
+      const selectEstado = page.locator('#code_status');
+      await expect(selectEstado).toBeVisible({ timeout: 5000 });
+      await selectEstado.click();
+      await page.keyboard.press('F'); // Filtra por "Finalizado"
+      await page.keyboard.press('Enter');
+
+      const botonBuscar = page.getByRole('button', { name: 'Buscar' });
+      await expect(botonBuscar).toBeVisible();
+      await botonBuscar.click();
+      await capturarPaso(page, "08_estado_finalizado_filtrado", "codigos-masivos");
     });
   });
+});

@@ -1,33 +1,40 @@
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
+import { capturarPaso } from "../utils/capturas"; 
 
 test.describe("Validación de perfilamiento pilotos", () => {
   test("Validar la página y sus respectivas funciones", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await login(page);
 
-    // Paso 2: Abrir el menú lateral
-    await Barra(page);
+    await test.step("Iniciar sesión", async () => {
+      await login(page);
+      await capturarPaso(page, "01_login", "perfilamiento-pilotos");
+    });
 
-    // Paso 3: Hacer clic en "Marketing y Growth"
+    await test.step("Abrir el menú lateral", async () => {
+      await Barra(page);
+      await capturarPaso(page, "02_barra", "perfilamiento-pilotos");
+    });
+
     await test.step("Seleccionar módulo Marketing y Growth", async () => {
       const marketingModule = page.getByText("Marketing y growth");
       await expect(marketingModule).toBeVisible({ timeout: 10000 });
       await marketingModule.click();
+      await capturarPaso(page, "03_marketing", "perfilamiento-pilotos");
     });
 
-    // Paso 4: Hover sobre "Perfilamiento" y clic en "Piloto"
-    await test.step("Ir a la sección Perfilamiento", async () => {
-      const Perfilamiento = page.getByText('Perfilamiento');
+    await test.step("Ir a la sección Perfilamiento > Pilotos", async () => {
+      const Perfilamiento = page.getByText("Perfilamiento");
       await expect(Perfilamiento).toBeVisible({ timeout: 10000 });
       await Perfilamiento.hover();
 
-      const perfiPilotos = page.getByRole('link', { name: 'Pilotos' });
+      const perfiPilotos = page.getByRole("link", { name: "Pilotos" });
       await expect(perfiPilotos).toBeVisible({ timeout: 10000 });
       await perfiPilotos.click();
 
-      await page.waitForTimeout(10000); // Esperar que cargue la página
-    })
-  })
+      await page.waitForTimeout(5000);
+      await capturarPaso(page, "04_perfilamiento_pilotos", "perfilamiento-pilotos");
+    });
+
+  });
 });

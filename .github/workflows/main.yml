@@ -44,6 +44,13 @@ jobs:
           name: playwright-html-report
           path: playwright-report
 
+      - name: 🖼️ Subir capturas como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+            name: screenshots
+            path: screenshots/
+
       - name: 📢 Notificar resultados en Google Chat
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
