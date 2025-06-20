@@ -26,7 +26,7 @@ export default defineConfig({
     actionTimeout: 15000, // 15s de espera máxima por acción
     navigationTimeout: 30000, // 30s de espera máxima para navegación
     headless: process.env.CI ? true : false, // Headless en CI, visible en local
-    screenshot: 'only-on-failure', // Capturas
+    //screenshot: 'only-on-failure', // Capturas
   },
 
   projects: [
