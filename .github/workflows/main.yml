@@ -84,13 +84,7 @@ jobs:
                           }
                         },
                         {
-                          "buttonList": {
-                            "buttons": [
-                              {
-                                "text": "🔍 CONSULTAR EVIDENCIAS",
-                                "onClick": {
-                                  "openLink": {
-                                    "url": "$WORKFLOW_URL"
+                        
                                   }
                                 }
                               },
