@@ -40,7 +40,7 @@ jobs:
         with:
           name: playwright-html-report
           path: playwright-report
-          
+
            # - name: 📂 Copiar capturas a carpeta screenshots
       #   if: always()
       #   run: |
@@ -96,10 +96,6 @@ jobs:
                                 }
                               },
                               {
-                                "text": "📄 REPORTE HTML",
-                                "onClick": {
-                                  "openLink": {
-                                    "url": "$ARTIFACTS_URL"
                                   }
                                 }
                               }
