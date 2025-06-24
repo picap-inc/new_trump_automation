@@ -40,27 +40,7 @@ jobs:
         with:
           name: playwright-html-report
           path: playwright-report
-
-      #- name: 📂 Copiar capturas a carpeta screenshots
-        #if: always()
-       # run: |
-        #    mkdir -p screenshots
-         #   find test-results -type f -name '*.png' -exec cp --parents {} screenshots/ \;
-
-      #- name: 🖼️ Comprimir capturas en ZIP
-       # if: always()
-        #run: |
-         # if [ -d "screenshots" ]; then
-          #  zip -r screenshots.zip screenshots
-          #fi
-
-     # - name: 🖼️ Subir ZIP de capturas como artefacto
-      #  if: always()
-       # uses: actions/upload-artifact@v4
-        #with:
-         # name: screenshots-zip
-          #path: screenshots.zip
-
+          
            # - name: 📂 Copiar capturas a carpeta screenshots
       #   if: always()
       #   run: |
