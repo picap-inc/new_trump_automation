@@ -61,7 +61,28 @@ jobs:
          # name: screenshots-zip
           #path: screenshots.zip
 
+           # - name: 📂 Copiar capturas a carpeta screenshots
+      #   if: always()
+      #   run: |
+      #     mkdir -p screenshots
+      #     find test-results -type f -name '*.png' -exec cp --parents {} screenshots/ \;
+
+      # - name: 🖼️ Comprimir capturas en ZIP
+      #   if: always()
+      #   run: |
+      #     if [ -d "screenshots" ]; then
+      #       zip -r screenshots.zip screenshots
+      #     fi
+
+      # - name: 🖼️ Subir ZIP de capturas como artefacto
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: screenshots-zip
+      #     path: screenshots.zip
+
       - name: 📢 Notificar resultados en Google Chat
+        if: always()
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           ARTIFACTS_URL="$WORKFLOW_URL#artifacts"
@@ -80,16 +101,25 @@ jobs:
                       "widgets": [
                         {
                           "textParagraph": {
-                            "text": "✅ Satisfactorias: *$PASSED_COUNT*  |  ❌ Fallidas: *$FAILED_COUNT*  |  ⚠️ Inestables: *$FLAKY_COUNT*  |  ⏭ Omitidas: *$SKIPPED_COUNT*  |  📊 Total: *$TOTAL_COUNT*"
+                            "text": "✅ Satisfactorias: *${{ env.PASSED_COUNT }}*  |  ❌ Fallidas: *${{ env.FAILED_COUNT }}*  |  ⚠️ Inestables: *${{ env.FLAKY_COUNT }}*  |  ⏭ Omitidas: *${{ env.SKIPPED_COUNT }}*  |  📊 Total: *${{ env.TOTAL_COUNT }}*"
                           }
                         },
                         {
-                        
+                          "buttonList": {
+                            "buttons": [
+                              {
+                                "text": "🔍 VER DETALLES EN GITHUB",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "$WORKFLOW_URL"
                                   }
                                 }
                               },
                               {
-                              
+                                "text": "📄 REPORTE HTML",
+                                "onClick": {
+                                  "openLink": {
+                                    "url": "$ARTIFACTS_URL"
                                   }
                                 }
                               }
