@@ -41,7 +41,8 @@ jobs:
           name: playwright-html-report
           path: playwright-report
 
-           # - name: 📂 Copiar capturas a carpeta screenshots
+      # Opcional: Capturas y ZIP (puedes activarlo más adelante si lo necesitas)
+      # - name: 📂 Copiar capturas a carpeta screenshots
       #   if: always()
       #   run: |
       #     mkdir -p screenshots
@@ -65,7 +66,6 @@ jobs:
         if: always()
         run: |
           WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ARTIFACTS_URL="$WORKFLOW_URL#artifacts"
           JSON_PAYLOAD=$(cat <<EOF
           {
             "cardsV2": [
@@ -88,14 +88,10 @@ jobs:
                           "buttonList": {
                             "buttons": [
                               {
-                                "text": "🔍 VER DETALLES EN GITHUB",
+                                "text": "🔍 CONSULTAR EVIDENCIAS",
                                 "onClick": {
                                   "openLink": {
                                     "url": "$WORKFLOW_URL"
-                                  }
-                                }
-                              },
-                              {
                                   }
                                 }
                               }
