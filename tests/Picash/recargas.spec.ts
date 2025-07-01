@@ -34,14 +34,19 @@ test.describe("Validación del módulo Picash", () => {
       await capturarPaso(page, "04_barra_picash_abierta", "picash");
     });
 
-    await test.step("Navegar al submódulo Wallet Países y validar URL", async () => {
-      const walletPaises = page.getByRole('link', { name: 'Wallet Países' });
-      await expect(walletPaises).toBeVisible({ timeout: 10000 });
-      await walletPaises.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/country_wallet", {
+    await test.step("Ingresar a Recargas", async () => {
+      // Click en 'Recargas'
+      const recargas = page.getByRole('link', { name: 'Recargas' });
+      await expect(recargas).toBeVisible({ timeout: 7000 });
+      await recargas.click();
+
+      // Validar URL
+      await expect(page).toHaveURL("https://admin.picap.io/picash/recharges", {
         timeout: 10000,
       });
-      await capturarPaso(page, "05_wallet_paises_url", "picash");
+
+      // Captura de pantalla
+      await capturarPaso(page, "05_recargas_picash", "picash");
     });
   });
 });

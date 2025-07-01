@@ -34,14 +34,36 @@ test.describe("Validación del módulo Picash", () => {
       await capturarPaso(page, "04_barra_picash_abierta", "picash");
     });
 
-    await test.step("Navegar al submódulo Wallet Países y validar URL", async () => {
-      const walletPaises = page.getByRole('link', { name: 'Wallet Países' });
-      await expect(walletPaises).toBeVisible({ timeout: 10000 });
-      await walletPaises.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/country_wallet", {
+    await test.step("Ingresar a Usuarios Elegibles desde Créditos", async () => {
+      const creditos = page.locator('a').filter({ hasText: /^Créditos$/ });
+      await expect(creditos).toBeVisible({ timeout: 7000 });
+      await creditos.click();
+
+      const elegiblesUsuarios = page.getByRole('link', { name: 'Usuarios elegibles' });
+      await expect(elegiblesUsuarios).toBeVisible({ timeout: 7000 });
+      await elegiblesUsuarios.click();
+
+      await expect(page).toHaveURL("https://admin.picap.io/picash/credits/passengers", {
         timeout: 10000,
       });
-      await capturarPaso(page, "05_wallet_paises_url", "picash");
+
+      await capturarPaso(page, "05_usuarios_elegibles", "picash");
+    });
+
+    await test.step("Buscar usuario elegible por número de billetera", async () => {
+      const inputBilletera = page.getByRole('textbox', { name: 'Número de billetera' });
+      await expect(inputBilletera).toBeVisible({ timeout: 5000 });
+
+      const numeroBilletera = '3027099869';
+      for (const char of numeroBilletera) {
+        await inputBilletera.type(char, { delay: 300 }); // Escritura lenta
+      }
+
+      const botonBuscar = page.getByRole('button', { name: 'Buscar' });
+      await expect(botonBuscar).toBeVisible({ timeout: 5000 });
+      await botonBuscar.click();
+
+      await capturarPaso(page, "06_busqueda_usuario_billetera", "picash");
     });
   });
 });

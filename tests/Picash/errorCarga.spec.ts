@@ -34,14 +34,20 @@ test.describe("Validación del módulo Picash", () => {
       await capturarPaso(page, "04_barra_picash_abierta", "picash");
     });
 
-    await test.step("Navegar al submódulo Wallet Países y validar URL", async () => {
-      const walletPaises = page.getByRole('link', { name: 'Wallet Países' });
-      await expect(walletPaises).toBeVisible({ timeout: 10000 });
-      await walletPaises.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/country_wallet", {
+    await test.step("Ingresar a Errores en carga de archivo desde Créditos", async () => {
+      const creditos = page.locator('a').filter({ hasText: /^Créditos$/ });
+      await expect(creditos).toBeVisible({ timeout: 7000 });
+      await creditos.click();
+
+      const errorCarga = page.getByRole('link', { name: 'Errores en carga de archivo' });
+      await expect(errorCarga).toBeVisible({ timeout: 7000 });
+      await errorCarga.click();
+
+      await expect(page).toHaveURL("https://admin.picap.io/picash/credits/load_file_errors", {
         timeout: 10000,
       });
-      await capturarPaso(page, "05_wallet_paises_url", "picash");
+
+      await capturarPaso(page, "05_errores_carga_archivo", "picash");
     });
   });
 });

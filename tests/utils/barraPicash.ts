@@ -1,6 +1,6 @@
-import { Page, expect } from "@playwright/test";
+import { Page, expect, Locator } from "@playwright/test";
 
-export async function barraPicash(page: Page) {
+export async function barraPicash(page: Page): Promise<Locator> {
   const menuButton = page.locator("#ham-menu");
   const headingPicash = page.getByRole('heading', { name: 'Picash', exact: true });
 
@@ -21,4 +21,6 @@ export async function barraPicash(page: Page) {
   await expect(headingPicash).toBeVisible({ timeout: 7000 });
 
   console.log("✅ Menú lateral de Picash verificado correctamente mediante heading.");
+
+  return headingPicash; // ✅ Esto es lo que faltaba
 }

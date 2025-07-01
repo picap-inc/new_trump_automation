@@ -34,14 +34,24 @@ test.describe("Validación del módulo Picash", () => {
       await capturarPaso(page, "04_barra_picash_abierta", "picash");
     });
 
-    await test.step("Navegar al submódulo Wallet Países y validar URL", async () => {
-      const walletPaises = page.getByRole('link', { name: 'Wallet Países' });
-      await expect(walletPaises).toBeVisible({ timeout: 10000 });
-      await walletPaises.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/country_wallet", {
+    await test.step("Ingresar a Configuracion Cashaout desde Retiros", async () => {
+      // Click en 'Retiros'
+      const retiros = page.locator('a').filter({ hasText: 'Retiros' });
+      await expect(retiros).toBeVisible({ timeout: 7000 });
+      await retiros.click();
+
+      // Click en 'Configuracion Cashaout'
+      const confiCashaout = page.getByRole('link', { name: 'Configuración Cashout' });
+      await expect(confiCashaout).toBeVisible({ timeout: 7000 });
+      await confiCashaout.click();
+
+      // Validar URL
+      await expect(page).toHaveURL("https://admin.picap.io/picash/withdrawals_config_cashout", {
         timeout: 10000,
       });
-      await capturarPaso(page, "05_wallet_paises_url", "picash");
+
+      // Captura de pantalla
+      await capturarPaso(page, "05_cashout_config", "picash");
     });
   });
 });

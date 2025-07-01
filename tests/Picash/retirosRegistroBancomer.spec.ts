@@ -34,14 +34,24 @@ test.describe("Validación del módulo Picash", () => {
       await capturarPaso(page, "04_barra_picash_abierta", "picash");
     });
 
-    await test.step("Navegar al submódulo Wallet Países y validar URL", async () => {
-      const walletPaises = page.getByRole('link', { name: 'Wallet Países' });
-      await expect(walletPaises).toBeVisible({ timeout: 10000 });
-      await walletPaises.click();
-      await expect(page).toHaveURL("https://admin.picap.io/picash/country_wallet", {
+    await test.step("Ingresar a Registro Bancomer desde Retiros", async () => {
+      // Click en 'Retiros'
+      const retiros = page.locator('a').filter({ hasText: 'Retiros' });
+      await expect(retiros).toBeVisible({ timeout: 7000 });
+      await retiros.click();
+
+      // Click en 'Registro Bancomer'
+      const registroBancomer = page.getByRole('link', { name: 'Registro Bancomer' });
+      await expect(registroBancomer).toBeVisible({ timeout: 7000 });
+      await registroBancomer.click();
+
+      // Validar URL
+      await expect(page).toHaveURL("https://admin.picap.io/picash/withdrawals_bancomer", {
         timeout: 10000,
       });
-      await capturarPaso(page, "05_wallet_paises_url", "picash");
+
+      // Captura de pantalla
+      await capturarPaso(page, "05_registro_bancomer", "picash");
     });
   });
 });
