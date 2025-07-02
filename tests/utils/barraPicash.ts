@@ -22,5 +22,5 @@ export async function barraPicash(page: Page): Promise<Locator> {
 
   console.log("✅ Menú lateral de Picash verificado correctamente mediante heading.");
 
-  return headingPicash; // ✅ Esto es lo que faltaba
+  return headingPicash; 
 }
