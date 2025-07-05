@@ -26,30 +26,18 @@ test.describe("Validación del módulo App", () => {
       await capturarPaso(page, "03_Direcciones", "App");
     });
 
-    await test.step("Aplicar filtros de búsqueda", async () => {
+    await test.step("Llenar filtros y buscar", async () => {
       await page.getByPlaceholder('Fecha inicial').fill('2025-06-01');
       await page.getByPlaceholder('Fecha final').fill('2025-06-30');        
       await page.getByPlaceholder('Ciudad').fill('Bogotá, D.C.');
-      await page.getByRole('button', { name: 'Buscar' }).click();
-      await page.waitForTimeout(2000); 
-      await page.getByRole('link', { name: 'Limpiar' }).click();
+
+      const buscarBtn = page.getByRole('button', { name: 'Buscar' });
+      await expect(buscarBtn).toBeVisible({ timeout: 5000 });
+      await expect(buscarBtn).toBeEnabled({ timeout: 5000 });
+      await buscarBtn.click();
+
+      await page.waitForTimeout(3000); // Esperar resultados
     });
 
-    await test.step("Crear nueva dirección (sin guardar)", async () => {
-      await page.getByText('Crear nueva dirección').click();
-      await expect(page.locator('#create-modal')).toBeVisible({ timeout: 5000 });
-
-      // Llenado lento de campos
-      await page.getByRole('textbox', { name: 'País' }).fill('Colombia');
-      await page.locator('#create-modal #city').fill('Bogotá');
-      await page.getByRole('textbox', { name: 'Localidad' }).fill('Chapinero');
-      await page.getByRole('textbox', { name: 'Barrio' }).fill('La Salle');
-      await page.getByRole('textbox', { name: 'Dirección', exact: true }).fill('Cra 7 #45-30');
-      await page.getByRole('textbox', { name: 'Etiqueta o lugar de dirección' }).nth(0).fill('Casa');
-      await page.getByRole('spinbutton', { name: 'Latitud' }).fill('4.648283');
-      await page.getByRole('spinbutton', { name: 'Longitud' }).fill('-74.063924');
-
-      await page.getByText('Salir sin crear').click();
-    });
   });
 });

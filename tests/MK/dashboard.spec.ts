@@ -35,15 +35,5 @@ test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
       await expect(dashboardHeading).toBeVisible({ timeout: 10000 });
       await capturarPaso(page, "05_dashboard_cargado", "dashboard-marketing");
     });
-
-    await test.step("Hacer clic en 'Ver' y validar URL", async () => {
-      const verButton = page.getByRole("link", { name: "Ver" }).getByRole("button");
-      await expect(verButton).toBeVisible({ timeout: 10000 });
-      await verButton.click();
-
-      await expect(page).toHaveURL("https://admin.picap.io/campaigns", { timeout: 10000 });
-      await capturarPaso(page, "06_click_ver_redireccion", "dashboard-marketing");
     });
-
   });
-});

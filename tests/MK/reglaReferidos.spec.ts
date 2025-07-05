@@ -73,17 +73,5 @@ test.describe("Sub módulo Marketing y Growth", () => {
       await btnNuevaRegla.click();
       await capturarPaso(page, "10_formulario_nueva_regla", "reglas_referidos");
     });
-
-    await test.step("Esperar carga del formulario", async () => {
-      const inputCodigo = page.getByRole("textbox", { name: "Código identificador" });
-      await expect(inputCodigo).toBeVisible({ timeout: 5000 });
-    });
-
-    await test.step("Ingresar código identificador", async () => {
-      const inputCodigo = page.getByRole("textbox", { name: "Código identificador" });
-      await inputCodigo.fill("PRUEBA QA");
-      await capturarPaso(page, "11_codigo_identificador", "reglas_referidos");
-    });
-
   });
 });

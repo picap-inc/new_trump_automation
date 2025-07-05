@@ -37,7 +37,7 @@ test.describe("Validación del módulo Picash", () => {
     await test.step("Ingresar a Comercios", async () => {
       // Click en 'Comercios'
       const comercioPicash = page.getByRole('link', { name: 'Comercios' });
-      await expect(comercioPicash).toBeVisible({ timeout: 7000 });
+      await expect(comercioPicash).toBeVisible({ timeout: 8000 });
       await comercioPicash.click();
 
       // Validar URL

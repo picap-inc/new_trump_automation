@@ -1,3 +1,5 @@
+/*
+
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login"; 
 import { Barra } from "../utils/Barra";
@@ -21,14 +23,17 @@ test.describe("Validación del módulo App", () => {
 
     await test.step("Entrar a Versiones de la app", async () => {
       const verApp = page.getByRole('link', { name: 'Versiones de la app' });
-      await expect(verApp).toBeVisible({ timeout: 10000 });
+      await expect(verApp).toBeVisible({ timeout: 12000 });
       await verApp.click();
       await capturarPaso(page, "03_Version", "App");
 
     // Validar URL
       await expect(page).toHaveURL("https://admin.picap.io/app_versions", {
       timeout: 10000,
+
+//SE COMENTA EL CODIGO PORQUE NO SE VE REFLEJADA LA OPCION EN NUEVO TRUMP
     });
   });
  });
 });
+*/

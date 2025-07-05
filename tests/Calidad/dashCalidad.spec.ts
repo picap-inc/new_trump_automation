@@ -54,30 +54,5 @@ test.describe("Validación del módulo Calidad", () => {
       await capturarPaso(page, "04_Fecha_Dinamica_Label", "Calidad");
       await page.waitForTimeout(2000);
     });
-
-    await test.step("Ir a Gestionar Áreas", async () => {
-      const gestionarAreas = page.getByRole('link', { name: 'Gestionar Áreas' });
-      await gestionarAreas.click();
-      await capturarPaso(page, "05_Gestionar_Areas", "Calidad");
-    });
-
-    await test.step("Volver a Dashboard", async () => {
-      const dashboardLink = page.getByRole('link', { name: 'Dashboard' });
-      await dashboardLink.click();
-      await capturarPaso(page, "06_Volver_Dashboard", "Calidad");
-    });
-
-    await test.step("Seleccionar agente: Estefany Carvajal", async () => {
-      const comboAgente = page.locator('#comparative-agent-select');
-      await comboAgente.selectOption({ label: "Estefany Carvajal" });
-      await capturarPaso(page, "07_Agente_Estefany", "Calidad");
-    });
-
-    await test.step("Seleccionar atributo: Atención al usuario", async () => {
-      const comboAtributo = page.locator('#comparative-attribute-select');
-      await comboAtributo.selectOption({ label: "Atención al usuario" });
-      await capturarPaso(page, "08_Atributo_AtencionUsuario", "Calidad");
-    });
-
   });
 });

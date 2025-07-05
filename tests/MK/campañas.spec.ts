@@ -1,3 +1,4 @@
+/*
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
@@ -62,6 +63,9 @@ test.describe("Sub módulo Marketing y Growth", () => {
       await expect(buscarButton).toBeVisible();
       await buscarButton.click();
       await capturarPaso(page, "08_busqueda_aplicada", "campanas");
+
+(SE COMENTA EL CODIGO PORQUE ME DICE ACCESO DENEGADO)
     });
   });
 });
+*/

@@ -2,39 +2,29 @@ import { Page, expect } from "@playwright/test";
 
 export async function Barra(page: Page) {
   const menuButton = page.locator("#ham-menu");
-  const menuVisible = page.locator("#mysidenav");
+  const menuContenido = page.locator(".mt-3");
 
-  console.log("🖥️ Resolución actual:", await page.evaluate(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight
-  })));
-
-  console.log("🔍 Verificando si el botón del menú existe...");
+  console.log("🔍 Esperando que el botón del menú esté disponible...");
   await expect(menuButton).toBeAttached({ timeout: 10000 });
 
-  console.log("📏 Verificando si el botón está visible...");
-  await expect(menuButton).toBeVisible({ timeout: 10000 }); // Aumentar tiempo de espera
+  // Asegurarse que no esté oculto por clases como 'hidden'
+  await page.waitForFunction(() => {
+    const el = document.getElementById('ham-menu');
+    return el && !el.classList.contains('hidden');
+  });
 
-  console.log("🖱️ Moviendo cursor hasta el botón del menú...");
-  await menuButton.scrollIntoViewIfNeeded();
-  await menuButton.hover();
+  console.log("⏳ Esperando 5 segundos para que cargue completamente la vista post-login...");
+  await page.waitForTimeout(5000); // ← espera adicional antes de tocar el menú
 
-  console.log("✅ Botón del menú encontrado. Probando si responde al clic...");
+  console.log("🖱️ Haciendo clic en el botón del menú...");
   await menuButton.click();
 
-  console.log("⏳ Esperando a que el menú se abra...");
-  try {
-    await menuVisible.waitFor({ state: "visible", timeout: 7000 });
-    console.log("✅ Menú lateral abierto correctamente.");
-  } catch (error) {
-    console.log("⚠️ Intentando forzar la apertura con otro clic...");
-    await menuButton.click({ force: true });
+  console.log("⏳ Esperando que el menú se despliegue...");
+  await page.waitForTimeout(1500); // breve pausa para animación
 
-    try {
-      await menuVisible.waitFor({ state: "visible", timeout: 7000 }); // Aumentar el tiempo de espera para el menú
-      console.log("✅ Menú lateral abierto tras reintentar.");
-    } catch (error) {
-      throw new Error("❌ El menú no se abrió después de varios intentos.");
-    }
+  if (await menuContenido.isVisible()) {
+    console.log("✅ Menú lateral abierto y visible.");
+  } else {
+    throw new Error("❌ El menú no se mantuvo abierto.");
   }
 }

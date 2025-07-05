@@ -9,6 +9,9 @@ export async function barraPicash(page: Page): Promise<Locator> {
   const isVisible = await menuButton.isVisible();
 
   if (isVisible) {
+    console.log("⏳ Esperando 5 segundos para que la página cargue completamente...");
+    await page.waitForTimeout(5000); // <-- Espera de 5 segundos
+
     console.log("🟢 Botón visible. Intentando abrir menú...");
     await menuButton.scrollIntoViewIfNeeded();
     await menuButton.hover();

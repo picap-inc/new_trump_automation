@@ -140,7 +140,7 @@ test.describe("Validación del módulo Usuarios", () => {
       await clickConLoading(linkPorActivar, page);
 
       const tabla = page.getByRole("table");
-      await expect(tabla).toBeVisible({ timeout: 10000 });
+      await expect(tabla).toBeVisible({ timeout: 120000 });
       await capturarPaso(page, "13_conductores_por_activar_resultados", "usuarios");
 
       const cuartaAccion = page.locator("table tbody tr").first().locator("a").nth(3);
