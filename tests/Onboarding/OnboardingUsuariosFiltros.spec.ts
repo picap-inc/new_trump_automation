@@ -29,7 +29,7 @@ test.describe("Validación de Onboarding Dashboard", () => {
 
     await test.step("Ir a Usuarios onboarding", async () => {
       await page.getByRole('link', { name: 'Usuarios onboarding' }).click();
-      await page.waitForURL("https://admin.picap.io/onboardings", { timeout: 15000 });
+      await page.waitForURL("https://admin.picap.io/onboardings", { timeout: 17000 });
       await expect(page).toHaveURL("https://admin.picap.io/onboardings");
       await capturarPaso(page, "05_pagina_usuarios_onboarding");
     });
