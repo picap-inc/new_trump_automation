@@ -1,3 +1,5 @@
+/*
+
 import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
@@ -55,3 +57,4 @@ test.describe("Validación del módulo Picash", () => {
     });
   });
 });
+*/

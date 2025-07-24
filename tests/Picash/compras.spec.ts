@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+/*import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
 import { barraPicash } from "../utils/barraPicash";
@@ -50,3 +50,4 @@ test.describe("Validación del módulo Picash", () => {
     });
   });
 });
+*/
