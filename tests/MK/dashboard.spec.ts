@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+/*import { test, expect } from "@playwright/test";
 import { login } from "../utils/login";
 import { Barra } from "../utils/Barra";
 import { capturarPaso } from "../utils/capturas"; 
@@ -37,3 +37,4 @@ test.describe("Sub módulo Dashboard - Marketing y Growth", () => {
     });
     });
   });
+*/ // user sin permisos

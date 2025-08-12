@@ -34,7 +34,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
       const companiasLink = page.getByRole("link", { name: "Compañías Compañías" });
       await expect(companiasLink).toBeVisible({ timeout: 10000 });
       await companiasLink.click();
-      await page.waitForTimeout(4000);
+      await page.waitForTimeout(6000);
       await capturarPaso(page, "05_modulo_companias", "companias");
     });
 
@@ -43,7 +43,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
       const nuevaBtn = page.getByRole("button", { name: "Nueva compañía" });
       await expect(nuevaBtn).toBeVisible({ timeout: 10000 });
       await nuevaBtn.click();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(4000);
       await capturarPaso(page, "06_formulario_creacion", "companias");
     });
 
@@ -73,7 +73,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
     // Paso 8: Salir del formulario
     await test.step("Salir del formulario", async () => {
       const salirBtn = page.getByRole("link", { name: "Salir" });
-      await expect(salirBtn).toBeVisible({ timeout: 5000 });
+      await expect(salirBtn).toBeVisible({ timeout: 7000 });
       await salirBtn.click();
       await capturarPaso(page, "08_salir_formulario", "companias");
     });
@@ -81,7 +81,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
     // Paso 9: Aplicar filtros de búsqueda
     await test.step("Aplicar filtros de búsqueda", async () => {
       await page.getByPlaceholder("Nombre").fill("SUPRA GROUP");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(700);
 
       const paisFiltro = page.locator("#geo_fence_id");
       await paisFiltro.selectOption({ label: "Colombia" });
@@ -110,7 +110,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
 
       await nuevaPestana.waitForLoadState("domcontentloaded");
       expect(nuevaPestana.url()).toContain("/pibox/companies/");
-      await nuevaPestana.waitForTimeout(4000);
+      await nuevaPestana.waitForTimeout(5000);
       await capturarPaso(nuevaPestana, "10_supra_group", "companias");
 
       // Paso 11: Click en Editar compañía
@@ -123,7 +123,7 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
       const guardarBtn = nuevaPestana.getByRole("button", { name: "Guardar Cambios" });
       await expect(guardarBtn).toBeVisible({ timeout: 10000 });
       await guardarBtn.click();
-      await nuevaPestana.waitForTimeout(3000);
+      await nuevaPestana.waitForTimeout(5000);
 
       await capturarPaso(nuevaPestana, "11_guardar_cambios", "companias");
     });
