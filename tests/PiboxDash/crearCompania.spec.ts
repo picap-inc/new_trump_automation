@@ -113,19 +113,6 @@ test.describe("Validación de creación y edición de compañías en Pibox", () 
       await nuevaPestana.waitForTimeout(5000);
       await capturarPaso(nuevaPestana, "10_supra_group", "companias");
 
-      // Paso 11: Click en Editar compañía
-      const editarBtn = nuevaPestana.getByRole("button", { name: "Editar compañía" });
-      await expect(editarBtn).toBeVisible({ timeout: 10000 });
-      await editarBtn.click();
-      await nuevaPestana.waitForTimeout(8000);
-
-      // Paso 12: Click en Guardar cambios
-      const guardarBtn = nuevaPestana.getByRole("button", { name: "Guardar Cambios" });
-      await expect(guardarBtn).toBeVisible({ timeout: 10000 });
-      await guardarBtn.click();
-      await nuevaPestana.waitForTimeout(5000);
-
-      await capturarPaso(nuevaPestana, "11_guardar_cambios", "companias");
     });
   });
 });

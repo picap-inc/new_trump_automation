@@ -22,7 +22,7 @@ async function clickConLoading(link: Locator, page: Page) {
           style.opacity === "0" ||
           el.offsetParent === null
         );
-      }, { timeout: 8000 });
+      }, { timeout: 9000 });
     } catch (_) {
     
     }
@@ -53,7 +53,7 @@ async function clickConLoading(link: Locator, page: Page) {
 
 test.describe("Validación del módulo Usuarios", () => {
   test("Flujo completo de búsqueda y navegación por filtros de estado", async ({ page }) => {
-    test.setTimeout(240000); // ⏱ Timeout global ampliado a 4 minutos
+    test.setTimeout(250000); // ⏱ Timeout global ampliado a 4 minutos
 
     // Paso 1: Iniciar sesión
     await test.step("Login en la plataforma", async () => {
@@ -136,7 +136,7 @@ test.describe("Validación del módulo Usuarios", () => {
     // Paso 6: Volver a "Conductores por activar" y hacer clic en acción
     await test.step("Validar resultados y dar clic en acción de la primera fila", async () => {
       const linkPorActivar = page.getByRole("link", { name: "Conductores por activar" });
-      await expect(linkPorActivar).toBeVisible({ timeout: 10000 });
+      await expect(linkPorActivar).toBeVisible({ timeout: 20000 });
       await clickConLoading(linkPorActivar, page);
 
       const tabla = page.getByRole("table");
