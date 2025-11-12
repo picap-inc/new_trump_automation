@@ -1,3 +1,16 @@
+/**
+ * barraPicash - Helper de compatibilidad con sistema anterior
+ * 
+ * @deprecated Este helper está deprecado. Usar PicashNavigationPage desde fixtures.
+ * Se mantiene para compatibilidad con tests no refactorizados.
+ * 
+ * Uso en tests refactorizados:
+ * import { test } from '../../fixtures/pages';
+ * test('mi test', async ({ picashNavigationPage }) => {
+ *   await picashNavigationPage.openPicashSideMenu();
+ * });
+ */
+
 import { Page, expect, Locator } from "@playwright/test";
 
 export async function barraPicash(page: Page): Promise<Locator> {
@@ -15,7 +28,8 @@ export async function barraPicash(page: Page): Promise<Locator> {
     console.log("🟢 Botón visible. Intentando abrir menú...");
     await menuButton.scrollIntoViewIfNeeded();
     await menuButton.hover();
-    await menuButton.click();
+    // Force click: data-action puede interferir
+    await menuButton.click({ force: true });
   } else {
     console.log("ℹ️ Botón de menú no visible. Posiblemente ya está abierto.");
   }
@@ -27,3 +41,4 @@ export async function barraPicash(page: Page): Promise<Locator> {
 
   return headingPicash; 
 }
+

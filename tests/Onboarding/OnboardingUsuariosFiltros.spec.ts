@@ -1,79 +1,59 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login"; 
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas"; 
+/**
+ * Test: Validación de Onboarding - Usuarios y Filtros
+ * 
+ * Valida: Filtros de usuarios onboarding y exportación
+ * Flujo: Login → Menú → Onboarding → Usuarios → Filtros → Exportar
+ * 
+ * Timeout 60s: Búsqueda puede tardar ~15s
+ */
 
-test.describe("Validación de Onboarding Dashboard", () => {
-  test("Validar la página, filtros y exportación de listado", async ({ page }) => {
-    test.setTimeout(60000); 
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
 
-    await test.step("Iniciar sesión", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login");
+test.describe('Validación de Onboarding Dashboard', () => {
+  test('Validar la página, filtros y exportación de listado', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    onboardingPage 
+  }, testInfo) => {
+    test.setTimeout(60000);
+
+    // Given: que estoy autenticado
+    await test.step('Iniciar sesión', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    await test.step("Abrir menú lateral", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_menu_lateral");
+    // When: abro el menú lateral
+    await test.step('Abrir menú lateral', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    await test.step("Desplegar módulo Onboarding", async () => {
-      await page.getByText('Onboarding', { exact: true }).click();
-      await capturarPaso(page, "03_desplegar_onboarding");
+    // And: despliego Onboarding
+    await test.step('Desplegar módulo Onboarding', async () => {
+      await onboardingPage.navigateToOnboarding();
+      await loginPage.takeScreenshot(testInfo, '03 - Onboarding desplegado');
     });
 
-    await test.step("Esperar enlace 'Usuarios onboarding'", async () => {
-      await page.waitForSelector('text= Usuarios onboarding', { state: 'visible' });
-      await capturarPaso(page, "04_enlace_usuarios_onboarding");
+    // And: espero y navego a Usuarios onboarding
+    await test.step('Ir a Usuarios onboarding', async () => {
+      await onboardingPage.navigateToUsuariosOnboarding();
+      await loginPage.takeScreenshot(testInfo, '04 - Usuarios onboarding');
     });
 
-    await test.step("Ir a Usuarios onboarding", async () => {
-      await page.getByRole('link', { name: 'Usuarios onboarding' }).click();
-      await page.waitForURL("https://admin.picap.io/onboardings", { timeout: 17000 });
-      await expect(page).toHaveURL("https://admin.picap.io/onboardings");
-      await capturarPaso(page, "05_pagina_usuarios_onboarding");
+    // And: aplico filtros
+    await test.step('Aplicar filtros de búsqueda', async () => {
+      await onboardingPage.filterUsuariosOnboarding('Colombia', 'Armenia', 'Carro');
+      await loginPage.takeScreenshot(testInfo, '05 - Filtros aplicados');
+      await loginPage.takeScreenshot(testInfo, '06 - Resultados cargados');
     });
 
-    await test.step("Seleccionar país Colombia", async () => {
-      const paisSelect = page.locator('#country');
-      await expect(paisSelect).toBeVisible();
-      await paisSelect.selectOption({ label: 'Colombia' });
-      await capturarPaso(page, "06_pais_colombia");
-    });
-
-    await test.step("Seleccionar ciudad Armenia usando teclado", async () => {
-      const ciudadSelect = page.locator('#city');
-      await expect(ciudadSelect).toBeVisible();
-      await ciudadSelect.click();
-      await page.keyboard.press('A');
-      await page.keyboard.press('Enter');
-      await capturarPaso(page, "07_ciudad_armenia");
-    });
-
-    await test.step("Seleccionar tipo de vehículo", async () => {
-      const vehicleSelect = page.locator('#vehicle_type');
-      await expect(vehicleSelect).toBeVisible();
-      await vehicleSelect.selectOption({ label: 'Carro' });
-      await capturarPaso(page, "08_tipo_vehiculo_carro");
-    });
-
-    await test.step("Hacer clic en el botón Buscar", async () => {
-      const buscarButton = page.getByRole('button', { name: 'Buscar' });
-      await expect(buscarButton).toBeVisible();
-      await buscarButton.click();
-      await capturarPaso(page, "09_busqueda_realizada");
-    });
-
-    await test.step("Esperar 15 segundos para reflejar búsqueda", async () => {
-      await page.waitForTimeout(15000);
-      await capturarPaso(page, "10_resultados_cargados");
-    });
-
-    await test.step("Exportar listado", async () => {
-      const exportButton = page.getByRole('link', { name: 'Exportar listado' });
-      await expect(exportButton).toBeVisible();
-      await exportButton.click();
-      await capturarPaso(page, "11_exportar_listado");
+    // Then: debería poder exportar
+    await test.step('Exportar listado', async () => {
+      await onboardingPage.exportList();
+      await loginPage.takeScreenshot(testInfo, '07 - Exportar listado');
     });
   });
 });

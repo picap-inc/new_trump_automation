@@ -1,43 +1,49 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas"; 
+/**
+ * Test: Navegación al módulo de Todos los Servicios
+ * 
+ * Valida: Acceso al módulo de Servicios y navegación a subsección
+ * Flujo: Login → Menú lateral → Servicios → Todos los servicios
+ */
 
-test.describe("Navegación al módulo de Todos los Servicios", () => {
-  test("Acceder a la sección de Todos los Servicios", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await test.step("Iniciar sesión", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "servicios");
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
+
+test.describe('Navegación al módulo de Todos los Servicios', () => {
+  test('Acceder a la sección de Todos los Servicios', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    serviciosPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado en el sistema
+    await test.step('Iniciar sesión', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    // Paso 2: Abrir el menú lateral
-    await test.step("Abrir menú lateral", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_menu_lateral", "servicios");
+    // When: abro el menú lateral
+    await test.step('Abrir menú lateral', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral abierto');
     });
 
-    // Paso 3: Hacer clic en módulo Servicios
-    await test.step("Seleccionar módulo Servicios", async () => {
-      const servicios = page.getByText("Servicios", { exact: true });
-      await expect(servicios).toBeVisible({ timeout: 10000 });
-      await servicios.click();
-      await capturarPaso(page, "03_modulo_servicios", "servicios");
+    // And: navego al módulo Servicios
+    await test.step('Seleccionar módulo Servicios', async () => {
+      await serviciosPage.navigateToServicios();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Servicios');
     });
 
-    // Paso 4: Hacer clic en "Todos los Servicios"
-    await test.step("Seleccionar submódulo Todos los Servicios", async () => {
-      const todosLosServicios = page.getByRole("link", { name: "Todos los servicios" });
-      await expect(todosLosServicios).toBeVisible({ timeout: 10000 });
-      await todosLosServicios.click();
-      await capturarPaso(page, "04_todos_servicios", "servicios");
+    // And: navego a Todos los Servicios
+    await test.step('Seleccionar submódulo Todos los Servicios', async () => {
+      await serviciosPage.navigateToTodosServicios();
+      await loginPage.takeScreenshot(testInfo, '04 - Todos los servicios');
     });
 
-    // Paso 5: Validar la URL cargada
-    await test.step("Validar carga de la página de Todos los Servicios", async () => {
-      const expectedUrl = 'https://admin.picap.io/bookings';
-      await expect(page).toHaveURL(expectedUrl, { timeout: 10000 });
-      await capturarPaso(page, "05_url_bookings", "servicios");
+    // Then: debería estar en la página correcta
+    await test.step('Validar carga de la página de Todos los Servicios', async () => {
+      await expect(page).toHaveURL('https://admin.picap.io/bookings', { timeout: 10000 });
+      await loginPage.takeScreenshot(testInfo, '05 - URL validada');
     });
   });
 });

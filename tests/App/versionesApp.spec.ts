@@ -1,39 +1,43 @@
+/**
+ * Test: Validación del módulo App - Versiones
+ * 
+ * NOTA: Este test está comentado porque la funcionalidad no existe en nuevo Trump
+ * TODO: Habilitar cuando se implemente "Versiones de la app" en la plataforma
+ */
+
 /*
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
 
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login"; 
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas";
-
-test.describe("Validación del módulo App", () => {
-  test("Validar flujo completo modulo App", async ({ page }) => {
-
-    await test.step("Login y menú lateral", async () => {
-      await login(page);
-      await Barra(page);
-      await capturarPaso(page, "01_login_barra", "Calidad");
+test.describe('Validación del módulo App', () => {
+  test('Validar flujo completo modulo App - Versiones', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    appPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado
+    await test.step('Login y menú lateral', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '01 - Login y menú');
     });
 
-    await test.step("Seleccionar módulo App", async () => {
-      const moduloApp = page.getByText('App', { exact: true });
-      await expect(moduloApp).toBeVisible({ timeout: 10000 });
-      await moduloApp.click();
-      await capturarPaso(page, "02_App", "App");
+    // When: navego al módulo App
+    await test.step('Seleccionar módulo App', async () => {
+      await appPage.navigateToApp();
+      await loginPage.takeScreenshot(testInfo, '02 - Módulo App');
     });
 
-    await test.step("Entrar a Versiones de la app", async () => {
-      const verApp = page.getByRole('link', { name: 'Versiones de la app' });
-      await expect(verApp).toBeVisible({ timeout: 12000 });
-      await verApp.click();
-      await capturarPaso(page, "03_Version", "App");
-
-    // Validar URL
-      await expect(page).toHaveURL("https://admin.picap.io/app_versions", {
-      timeout: 10000,
-
-//SE COMENTA EL CODIGO PORQUE NO SE VE REFLEJADA LA OPCION EN NUEVO TRUMP
+    // And: entro a Versiones de la app
+    await test.step('Entrar a Versiones de la app', async () => {
+      await appPage.navigateToVersionesApp();
+      await loginPage.takeScreenshot(testInfo, '03 - Versiones');
+      
+      // Then: debería estar en la URL correcta
+      await expect(page).toHaveURL('https://admin.picap.io/app_versions', { timeout: 10000 });
     });
   });
- });
 });
 */

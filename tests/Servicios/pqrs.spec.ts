@@ -1,43 +1,45 @@
-import { test, expect } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas"; 
+/**
+ * Test: Navegación al módulo de PQRs
+ * 
+ * Valida: Acceso a la sección de PQRs
+ * Flujo: Login → Menú → Servicios → PQRs → Validar URL
+ */
 
-test.describe("Navegación al módulo de PQRs", () => {
-  test("Acceder a la sección de PQRs", async ({ page }) => {
-    // Paso 1: Iniciar sesión
-    await test.step("Iniciar sesión", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "servicios");
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
+
+test.describe('Navegación al módulo de PQRs', () => {
+  test('Acceder a la sección de PQRs', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    serviciosPage 
+  }, testInfo) => {
+    
+    // Given: que estoy autenticado
+    await test.step('Iniciar sesión', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    // Paso 2: Abrir el menú lateral
-    await test.step("Abrir menú lateral", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_menu_lateral", "servicios");
+    // When: abro el menú lateral
+    await test.step('Abrir menú lateral', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    // Paso 3: Esperar a que "Servicios" sea interactuable y hacer clic
-    await test.step("Seleccionar módulo Servicios", async () => {
-      const servicios = page.getByText("Servicios", { exact: true });
-      await expect(servicios).toBeVisible({ timeout: 10000 });
-      await servicios.click();
-      await capturarPaso(page, "03_modulo_servicios", "servicios");
+    // And: navego a Servicios
+    await test.step('Seleccionar módulo Servicios', async () => {
+      await serviciosPage.navigateToServicios();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Servicios');
     });
 
-    // Paso 4: Hacer clic en "PQRs"
-    await test.step("Seleccionar submódulo PQRs", async () => {
-      const pqrs = page.getByRole("link", { name: "PQRs" });
-      await expect(pqrs).toBeVisible({ timeout: 10000 });
-      await pqrs.click();
-      await capturarPaso(page, "04_submodulo_pqrs", "servicios");
-    });
-
-    // Paso 5: Validar que la página se cargó correctamente verificando la URL
-    await test.step("Validar carga de la página de PQRs", async () => {
-      const expectedUrl = "https://admin.picap.io/pqrs";
-      await expect(page).toHaveURL(expectedUrl, { timeout: 10000 });
-      await capturarPaso(page, "05_url_pqrs", "servicios");
+    // Then: debería acceder a PQRs
+    await test.step('Seleccionar submódulo PQRs', async () => {
+      await serviciosPage.navigateToPQRS();
+      await loginPage.takeScreenshot(testInfo, '04 - PQRs');
+      
+      await expect(page).toHaveURL('https://admin.picap.io/pqrs');
     });
   });
 });

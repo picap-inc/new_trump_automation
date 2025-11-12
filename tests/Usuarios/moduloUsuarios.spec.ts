@@ -1,131 +1,70 @@
-import { test, expect, Page, Locator } from "@playwright/test";
-import { login } from "../utils/login";
-import { Barra } from "../utils/Barra";
-import { capturarPaso } from "../utils/capturas";
+/**
+ * Test: Validación del módulo Usuarios
+ * 
+ * Valida: Búsqueda de usuarios, historial y navegación por secciones
+ * Flujo: Login → Usuarios → Búsqueda → Historial → Secciones
+ * 
+ * Timeout 250s: Test extenso con múltiples navegaciones
+ */
 
-//Función para verificar si la página sigue activa
-function isPageActive(page: Page): boolean {
-  return !page.isClosed();
-}
+import { test, expect } from '../../fixtures/pages';
+import { users } from '../../config/environments';
 
-//Función robusta con espera de loader y reintentos
-async function clickConLoading(link: Locator, page: Page) {
-  const esperarLoading = async () => {
-    try {
-      await page.waitForFunction(() => {
-        const el = document.querySelector("#loading_screen") as HTMLElement | null;
-        if (!el) return true;
-        const style = window.getComputedStyle(el);
-        return (
-          style.display === "none" ||
-          style.visibility === "hidden" ||
-          style.opacity === "0" ||
-          el.offsetParent === null
-        );
-      }, { timeout: 9000 });
-    } catch (_) {
-    
-    }
-  };
+test.describe('Validación del módulo Usuarios', () => {
+  test('Flujo completo de búsqueda y navegación por filtros de estado', async ({ 
+    page,
+    loginPage, 
+    navigationPage, 
+    usuariosPage 
+  }, testInfo) => {
+    test.setTimeout(250000);
 
-  await esperarLoading();
-
-  for (let i = 0; i < 3; i++) {
-    try {
-      await link.click({ timeout: 10000 });
-      break;
-    } catch (e) {
-      await esperarLoading();
-
-      if (!isPageActive(page)) {
-        console.warn("⚠️ Página cerrada durante clickConLoading.");
-        break;
-      }
-
-      await page.waitForTimeout(500);
-
-      if (i === 2) throw e;
-    }
-  }
-
-  await esperarLoading();
-}
-
-test.describe("Validación del módulo Usuarios", () => {
-  test("Flujo completo de búsqueda y navegación por filtros de estado", async ({ page }) => {
-    test.setTimeout(250000); // ⏱ Timeout global ampliado a 4 minutos
-
-    // Paso 1: Iniciar sesión
-    await test.step("Login en la plataforma", async () => {
-      await login(page);
-      await capturarPaso(page, "01_login", "usuarios");
+    // Given: que estoy autenticado
+    await test.step('Login en la plataforma', async () => {
+      await loginPage.login(users.admin.email, users.admin.password);
+      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
     });
 
-    // Paso 2: Abrir barra lateral
-    await test.step("Abrir barra lateral de navegación", async () => {
-      await Barra(page);
-      await capturarPaso(page, "02_barra_lateral", "usuarios");
+    // When: abro el menú lateral
+    await test.step('Abrir barra lateral de navegación', async () => {
+      await navigationPage.openSideMenu();
+      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');
     });
 
-    // Paso 3: Ingresar al módulo de Usuarios
-    await test.step("Navegar al módulo Usuarios", async () => {
-      const usuarios = page.getByRole("link", { name: "users Usuarios" });
-      await expect(usuarios).toBeVisible({ timeout: 10000 });
-      await clickConLoading(usuarios, page);
-      await capturarPaso(page, "03_click_modulo_usuarios", "usuarios");
-
-      const tablaUsuarios = page.getByRole("table");
-      await expect(tablaUsuarios).toBeVisible({ timeout: 15000 });
-
-      const inputEmail = page.getByRole("textbox", { name: "Email" });
-      await expect(inputEmail).toBeVisible({ timeout: 10000 });
-
-      await capturarPaso(page, "04_tabla_usuarios_cargada", "usuarios");
+    // And: navego al módulo Usuarios
+    await test.step('Navegar al módulo Usuarios', async () => {
+      await usuariosPage.navigateToUsuarios();
+      await loginPage.takeScreenshot(testInfo, '03 - Módulo Usuarios');
+      await loginPage.takeScreenshot(testInfo, '04 - Tabla cargada');
     });
 
-    // Paso 4: Filtro por Email y ver historial
-    await test.step("Filtrar por Email, abrir y cerrar historial", async () => {
-      const inputEmail = page.getByRole("textbox", { name: "Email" });
-      await inputEmail.click();
-      await inputEmail.fill("");
-      await inputEmail.type("davilaprod@gmail.com", { delay: 100 });
+    // And: filtro por Email
+    await test.step('Filtrar por Email, abrir y cerrar historial', async () => {
+      await usuariosPage.searchByEmail('davilaprod@gmail.com');
+      await loginPage.takeScreenshot(testInfo, '05 - Filtro email');
 
-      const btnBuscar = page.getByRole("button", { name: "Buscar" });
-      await expect(btnBuscar).toBeEnabled({ timeout: 15000 });
-      await btnBuscar.click();
+      await usuariosPage.openHistorial();
+      await loginPage.takeScreenshot(testInfo, '06 - Historial abierto');
 
-      await page.waitForTimeout(2000);
-      await capturarPaso(page, "05_filtro_email", "usuarios");
-
-      const linkHistorial = page.getByRole("link", { name: "Historial de cambios" });
-      await expect(linkHistorial).toBeVisible({ timeout: 10000 });
-      await clickConLoading(linkHistorial, page);
-      await capturarPaso(page, "06_historial_abierto", "usuarios");
-
-      const btnCerrarHistorial = page.locator('span:nth-child(3) > .w-6 > path');
-      await expect(btnCerrarHistorial).toBeVisible({ timeout: 5000 });
-      await btnCerrarHistorial.click();
-      await capturarPaso(page, "07_historial_cerrado", "usuarios");
+      await usuariosPage.closeHistorial();
+      await loginPage.takeScreenshot(testInfo, '07 - Historial cerrado');
     });
 
-    // Paso 5: Navegar por otras secciones
-    await test.step("Navegar por otras secciones del módulo", async () => {
+    // Then: debería poder navegar por secciones
+    await test.step('Navegar por otras secciones del módulo', async () => {
       const secciones = [
-        { name: "Pasajeros", id: "08_pasajeros" },
-        { name: "Conductores", id: "09_conductores", options: { exact: true } },
-        { name: "Conductores por activar", id: "10_por_activar" },
-        { name: "Suspendidos", id: "11_suspendidos" },
-        { name: "Expulsados", id: "12_expulsados" },
+        { name: 'Pasajeros', id: '08' },
+        { name: 'Conductores', id: '09', exact: true },
+        { name: 'Conductores por activar', id: '10' },
+        { name: 'Suspendidos', id: '11' },
+        { name: 'Expulsados', id: '12' },
       ];
 
       for (const seccion of secciones) {
         await test.step(`Ir a sección: ${seccion.name}`, async () => {
           try {
-            const link = page.getByRole("link", { name: seccion.name, ...seccion.options });
-            await expect(link).toBeVisible({ timeout: 10000 });
-            await clickConLoading(link, page);
-            await page.waitForTimeout(1000);
-            await capturarPaso(page, seccion.id, "usuarios");
+            await usuariosPage.navigateToSeccion(seccion.name, seccion.exact || false);
+            await loginPage.takeScreenshot(testInfo, `${seccion.id} - ${seccion.name}`);
           } catch (error) {
             console.warn(`⚠️ Sección omitida "${seccion.name}" por timeout o error:`, error);
           }
@@ -133,20 +72,13 @@ test.describe("Validación del módulo Usuarios", () => {
       }
     });
 
-    // Paso 6: Volver a "Conductores por activar" y hacer clic en acción
-    await test.step("Validar resultados y dar clic en acción de la primera fila", async () => {
-      const linkPorActivar = page.getByRole("link", { name: "Conductores por activar" });
-      await expect(linkPorActivar).toBeVisible({ timeout: 20000 });
-      await clickConLoading(linkPorActivar, page);
+    // And: valido resultados en Conductores por activar
+    await test.step('Validar resultados y dar clic en acción de la primera fila', async () => {
+      await usuariosPage.navigateToSeccion('Conductores por activar');
+      await loginPage.takeScreenshot(testInfo, '13 - Conductores por activar');
 
-      const tabla = page.getByRole("table");
-      await expect(tabla).toBeVisible({ timeout: 140000 });
-      await capturarPaso(page, "13_conductores_por_activar_resultados", "usuarios");
-
-      const cuartaAccion = page.locator("table tbody tr").first().locator("a").nth(3);
-      await expect(cuartaAccion).toBeVisible({ timeout: 10000 });
-      await cuartaAccion.click();
-      await capturarPaso(page, "14_click_accion_conductor", "usuarios");
+      await usuariosPage.clickActionInFirstRow(3);
+      await loginPage.takeScreenshot(testInfo, '14 - Click acción conductor');
     });
   });
 });
