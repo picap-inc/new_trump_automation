@@ -12,8 +12,6 @@ import { users } from '../../config/environments';
 
 test.describe('Validación de creación y edición de compañías en Pibox', () => {
   test('Crear, filtrar y editar compañía en Pibox', async ({ 
-    page, 
-    context,
     loginPage, 
     navigationPage, 
     piboxDashboardPage 
@@ -40,10 +38,7 @@ test.describe('Validación de creación y edición de compañías en Pibox', () 
     });
 
     await test.step('Entrar al módulo Compañías', async () => {
-      const companiasLink = page.getByRole('link', { name: 'Compañías Compañías' });
-      await expect(companiasLink).toBeVisible({ timeout: 10000 });
-      await companiasLink.click();
-      await page.waitForTimeout(6000);
+      await piboxDashboardPage.navigateToCompanias();
       await loginPage.takeScreenshot(testInfo, '05 - Módulo compañías');
     });
 

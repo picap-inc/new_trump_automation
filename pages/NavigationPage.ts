@@ -29,18 +29,23 @@ export class NavigationPage extends BasePage {
    */
   async openSideMenu(): Promise<void> {
     console.log('🔍 Esperando que el botón del menú esté disponible...');
+
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => {});
+    await this.page
+      .waitForURL((url) => !url.pathname.includes('/sessions'), { timeout: testConfig.timeouts.long })
+      .catch(() => {});
     
     // Esperar que el botón esté en el DOM y visible
-    await expect(this.menuButton).toBeAttached({ timeout: testConfig.timeouts.medium });
+    await expect(this.menuButton).toBeAttached({ timeout: testConfig.timeouts.long });
+    await expect(this.menuButton).toBeVisible({ timeout: testConfig.timeouts.long });
+    await expect(this.menuButton).toBeEnabled({ timeout: testConfig.timeouts.long });
     
     // Asegurar que no esté oculto por clases CSS
     await this.page.waitForFunction(() => {
       const el = document.getElementById('ham-menu');
       return el && !el.classList.contains('hidden');
     }, { timeout: testConfig.timeouts.medium });
-
-    console.log('⏳ Esperando carga completa post-login (5s)...');
-    await this.waitHelpers.wait(testConfig.waits.afterLogin);
 
     // Scroll al elemento para asegurar visibilidad
     await this.menuButton.scrollIntoViewIfNeeded();
@@ -72,23 +77,38 @@ export class NavigationPage extends BasePage {
       throw new Error('❌ No se pudo hacer click en el menú después de 3 intentos');
     }
 
-    console.log('⏳ Esperando animación del menú (1.5s)...');
-    await this.waitHelpers.wait(testConfig.waits.menuAnimation);
-
-    // Verificar que el menú esté visible
-    const menuVisible = await this.menuContent.isVisible().catch(() => false);
-    if (menuVisible) {
-      console.log('✅ Menú lateral abierto y visible.');
-    } else {
-      console.warn('⚠️ El menú puede no estar visible, continuando...');
+    // Verificar que el menú esté visible (reintento si fue un toggle fallido)
+    let menuVisible = await this.menuContent.isVisible().catch(() => false);
+    if (!menuVisible) {
+      for (let i = 0; i < 2; i++) {
+        try {
+          await this.menuButton.click({ force: true, timeout: 5000 });
+          await expect(this.menuContent).toBeVisible({ timeout: testConfig.timeouts.medium });
+          menuVisible = true;
+          break;
+        } catch (_) {
+          await this.waitHelpers.wait(300);
+        }
+      }
     }
+
+    if (!menuVisible) {
+      const hasVisibleLinks = await this.sideNav.getByRole('link').first().isVisible().catch(() => false);
+      if (!hasVisibleLinks) {
+        throw new Error('❌ El menú lateral no quedó visible después de los reintentos.');
+      }
+      console.warn('⚠️ Menú no visible, pero hay enlaces accesibles.');
+      return;
+    }
+
+    console.log('✅ Menú lateral abierto y visible.');
   }
 
   /**
    * Navega a un módulo específico del menú
    */
   async navigateToModule(moduleName: string): Promise<void> {
-    const moduleLink = this.page.getByText(moduleName);
+    const moduleLink = this.sideNav.getByText(moduleName, { exact: true });
     await expect(moduleLink).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(moduleLink);
   }
@@ -135,8 +155,22 @@ export class NavigationPage extends BasePage {
   async closeUserMenuIfOpen(): Promise<void> {
     const isOpen = await this.logoutLink.isVisible().catch(() => false);
     if (isOpen) {
-      // Click fuera del menú para cerrarlo
-      await this.page.locator('div').filter({ hasText: 'Automatizacion BdbdAbrir men' }).nth(2).click();
+      // Intentar cerrar con toggle del botón, luego Escape y click fuera
+      try {
+        await this.profileButton.click({ timeout: testConfig.timeouts.short });
+      } catch (_) {
+        // Ignorar y continuar con otros métodos
+      }
+
+      if (await this.logoutLink.isVisible().catch(() => false)) {
+        await this.page.keyboard.press('Escape').catch(() => {});
+      }
+
+      if (await this.logoutLink.isVisible().catch(() => false)) {
+        await this.page.mouse.click(5, 5);
+      }
+
+      await expect(this.logoutLink).toBeHidden({ timeout: testConfig.timeouts.medium });
     }
   }
 }

@@ -11,17 +11,18 @@ export class OnboardingPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.onboardingModule = page.locator('#mySidenav').getByText('Onboarding', { exact: true });
-    this.onboardingDashboardLink = page.getByRole('link', { name: 'Onboarding dashboard' });
+    this.onboardingModule = this.sideNav.getByText('Onboarding', { exact: true });
+    this.onboardingDashboardLink = this.sideNav.getByRole('link', { name: /Onboarding dashboard/i });
   }
 
   /**
    * Navega al módulo de Onboarding desde el menú lateral
    */
   async navigateToOnboarding(): Promise<void> {
-    await this.clickElement(this.onboardingModule);
-    // Esperar a que se expanda el submenú
-    await this.waitHelpers.wait(1000);
+    await this.forceClick(this.onboardingModule);
+    await this.waitHelpers.waitWithRetry(async () => {
+      await expect(this.onboardingDashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    }, 3);
   }
 
   /**
@@ -29,17 +30,18 @@ export class OnboardingPage extends BasePage {
    * Espera a que el enlace sea visible después de desplegar el módulo
    */
   async navigateToDashboard(): Promise<void> {
-    await this.page.waitForSelector('text=Onboarding dashboard', { state: 'visible' });
-    await this.clickElement(this.onboardingDashboardLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
-    await this.waitForURL('https://admin.picap.io/onboarding_dashboard', 5000);
-    await this.expectURL('https://admin.picap.io/onboarding_dashboard');
+    await this.clickAndWaitForURL(this.onboardingDashboardLink, 'https://admin.picap.io/onboarding_dashboard');
   }
 
   async applyDashboardFilters(country: string, city: string, activationDate: string, newDriversDate: string, monthStatus: string): Promise<void> {
     await this.page.locator('#country').selectOption({ label: country });
-    await this.waitHelpers.wait(1000);
+    await this.page.waitForFunction(
+      () => {
+        const select = document.querySelector('#city') as HTMLSelectElement | null;
+        return Boolean(select && select.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    );
     await this.page.locator('#city').selectOption({ label: city });
     await this.page.locator('#activation_date_two').fill(activationDate);
     await this.page.locator('#new_drivers_date_two').fill(newDriversDate);
@@ -47,13 +49,8 @@ export class OnboardingPage extends BasePage {
   }
 
   async navigateToUsuariosOnboarding(): Promise<void> {
-    await this.page.waitForSelector('text= Usuarios onboarding', { state: 'visible' });
-    const usuariosLink = this.page.getByRole('link', { name: 'Usuarios onboarding' });
-    await this.clickElement(usuariosLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
-    await this.waitForURL('https://admin.picap.io/onboardings', 17000);
-    await this.expectURL('https://admin.picap.io/onboardings');
+    const usuariosLink = this.sideNav.getByRole('link', { name: /Usuarios onboarding/i });
+    await this.clickAndWaitForURL(usuariosLink, 'https://admin.picap.io/onboardings', 17000);
   }
 
   async filterUsuariosOnboarding(country: string, city: string, vehicleType: string): Promise<void> {
@@ -63,9 +60,20 @@ export class OnboardingPage extends BasePage {
 
     const ciudadSelect = this.page.locator('#city');
     await expect(ciudadSelect).toBeVisible();
-    await ciudadSelect.click();
-    await this.page.keyboard.press(city.charAt(0).toUpperCase());
-    await this.page.keyboard.press('Enter');
+    await this.page.waitForFunction(
+      () => {
+        const select = document.querySelector('#city') as HTMLSelectElement | null;
+        return Boolean(select && select.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    );
+    try {
+      await ciudadSelect.selectOption({ label: city });
+    } catch (_) {
+      await ciudadSelect.click();
+      await this.page.keyboard.press(city.charAt(0).toUpperCase());
+      await this.page.keyboard.press('Enter');
+    }
 
     const vehicleSelect = this.page.locator('#vehicle_type');
     await expect(vehicleSelect).toBeVisible();
@@ -74,8 +82,16 @@ export class OnboardingPage extends BasePage {
     const buscarButton = this.page.getByRole('button', { name: 'Buscar' });
     await expect(buscarButton).toBeVisible();
     await this.clickElement(buscarButton);
-    
-    await this.waitHelpers.wait(15000); // Esperar resultados
+
+    const resultsRow = this.page.locator('table tbody tr').first();
+    const emptyState = this.page.getByText(/sin resultados|no hay resultados|no records|no data/i);
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(resultsRow).toBeVisible({ timeout: testConfig.timeouts.long }),
+        expect(emptyState).toBeVisible({ timeout: testConfig.timeouts.long })
+      ]);
+    }, 2);
   }
 
   async exportList(): Promise<void> {

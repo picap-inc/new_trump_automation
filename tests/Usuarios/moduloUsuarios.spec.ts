@@ -62,12 +62,8 @@ test.describe('Validación del módulo Usuarios', () => {
 
       for (const seccion of secciones) {
         await test.step(`Ir a sección: ${seccion.name}`, async () => {
-          try {
-            await usuariosPage.navigateToSeccion(seccion.name, seccion.exact || false);
-            await loginPage.takeScreenshot(testInfo, `${seccion.id} - ${seccion.name}`);
-          } catch (error) {
-            console.warn(`⚠️ Sección omitida "${seccion.name}" por timeout o error:`, error);
-          }
+          await usuariosPage.navigateToSeccion(seccion.name, seccion.exact || false);
+          await loginPage.takeScreenshot(testInfo, `${seccion.id} - ${seccion.name}`);
         });
       }
     });

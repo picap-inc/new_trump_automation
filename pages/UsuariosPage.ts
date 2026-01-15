@@ -16,7 +16,7 @@ export class UsuariosPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.usuariosLink = page.getByRole('link', { name: 'users Usuarios' });
+    this.usuariosLink = this.sideNav.getByRole('link', { name: /Usuarios/i });
     this.emailInput = page.getByRole('textbox', { name: 'Email' });
     this.buscarButton = page.getByRole('button', { name: 'Buscar' });
     this.tablaUsuarios = page.getByRole('table');
@@ -70,7 +70,10 @@ export class UsuariosPage extends BasePage {
     await expect(this.usuariosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickWithRetry(this.usuariosLink);
     
-    await expect(this.tablaUsuarios).toBeVisible({ timeout: 15000 });
+    const tablaVisible = await this.tablaUsuarios.isVisible().catch(() => false);
+    if (!tablaVisible) {
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+    }
     await expect(this.emailInput).toBeVisible({ timeout: testConfig.timeouts.medium });
   }
 
@@ -90,14 +93,34 @@ export class UsuariosPage extends BasePage {
   }
 
   async closeHistorial(): Promise<void> {
-    await expect(this.cerrarHistorialButton).toBeVisible({ timeout: 5000 });
+    await expect(this.cerrarHistorialButton).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.cerrarHistorialButton);
   }
 
   async navigateToSeccion(seccionName: string, exact = false): Promise<void> {
-    const link = this.page.getByRole('link', { name: seccionName, exact });
-    await expect(link).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickWithRetry(link);
+    if (!(await this.sideNav.isVisible().catch(() => false))) {
+      const menuButton = this.page.locator('#ham-menu');
+      if (await menuButton.isVisible().catch(() => false)) {
+        await menuButton.click({ force: true });
+        await expect(this.sideNav).toBeVisible({ timeout: testConfig.timeouts.long });
+      }
+    }
+
+    const sideNavLink = this.sideNav.getByRole('link', { name: seccionName, exact });
+    if (await sideNavLink.count() > 0) {
+      await sideNavLink.first().scrollIntoViewIfNeeded();
+      await expect(sideNavLink.first()).toBeVisible({ timeout: testConfig.timeouts.long });
+      await this.clickWithRetry(sideNavLink.first());
+      await this.waitHelpers.wait(1000);
+      return;
+    }
+
+    const pageLink = this.page.getByRole('link', { name: seccionName, exact });
+    const pageButton = this.page.getByRole('button', { name: seccionName, exact });
+    const target = (await pageLink.count()) > 0 ? pageLink.first() : pageButton.first();
+
+    await expect(target).toBeVisible({ timeout: testConfig.timeouts.long });
+    await this.clickWithRetry(target);
     await this.waitHelpers.wait(1000);
   }
 

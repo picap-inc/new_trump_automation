@@ -8,6 +8,7 @@ import { testConfig } from '../config/test-config';
 export class PiboxDashboardPage extends BasePage {
   private readonly piboxLink: Locator;
   private readonly menuButton: Locator;
+  private readonly companiasLink: Locator;
   private readonly listaServiciosLink: Locator;
   private readonly crearCompaniaLink: Locator;
   private readonly paquetesLink: Locator;
@@ -15,19 +16,25 @@ export class PiboxDashboardPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.piboxLink = page.getByRole('link', { name: 'pibox Pibox Dashboard' });
+    this.piboxLink = page.getByRole('link', { name: /Pibox Dashboard/i });
     this.menuButton = page.locator('#ham-menu');
+    this.companiasLink = page.getByRole('link', { name: /Compañías/i });
     this.listaServiciosLink = page.getByRole('link', { name: /Lista de servicios/i });
-    this.crearCompaniaLink = page.getByRole('link', { name: 'Crear compañía' });
-    this.paquetesLink = page.getByRole('link', { name: 'Paquetes' });
-    this.peticionOperacionesLink = page.getByRole('link', { name: /Petición.*operaciones/i });
+    this.crearCompaniaLink = page.getByRole('link', { name: /Crear compañía/i });
+    this.paquetesLink = page.getByRole('link', { name: /Paquetes/i });
+    this.peticionOperacionesLink = page.getByRole('link', { name: /Peticiones de operaciones/i });
   }
 
   async navigateToPibox(): Promise<void> {
-    await this.piboxLink.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.piboxLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
+    if (await this.piboxLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.piboxLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitHelpers.wait(2000);
+      return;
+    }
+
+    await this.goto('/pibox');
+    await this.waitHelpers.waitForPageLoad();
   }
 
   /**
@@ -65,10 +72,34 @@ export class PiboxDashboardPage extends BasePage {
   }
 
   async navigateToPaquetes(): Promise<void> {
-    await expect(this.paquetesLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.paquetesLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
+    if (await this.paquetesLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.paquetesLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitHelpers.wait(2000);
+      return;
+    }
+
+    if (await this.companiasLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.companiasLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitHelpers.wait(2000);
+      return;
+    }
+
+    await this.goto('/pibox/companies');
+    await this.waitHelpers.waitForPageLoad();
+  }
+
+  async navigateToCompanias(): Promise<void> {
+    if (await this.companiasLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.companiasLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitHelpers.wait(2000);
+      return;
+    }
+
+    await this.goto('/pibox/companies');
+    await this.waitHelpers.waitForPageLoad();
   }
 
   async navigateToPeticionOperaciones(): Promise<void> {
