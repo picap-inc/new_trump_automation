@@ -32,6 +32,7 @@ import { TrumpPage } from '../pages/TrumpPage';
 import { PiboxDashboardPage } from '../pages/PiboxDashboardPage';
 import { PoliticasPage } from '../pages/PoliticasPage';
 import { ChatsPage } from '../pages/ChatsPage';
+import { TechnicalSupportPage } from '../pages/TechnicalSupportPage';
 
 type PageFixtures = {
   loginPage: LoginPage;
@@ -50,6 +51,7 @@ type PageFixtures = {
   piboxDashboardPage: PiboxDashboardPage;
   politicasPage: PoliticasPage;
   chatsPage: ChatsPage;
+  technicalSupportPage: TechnicalSupportPage;
 };
 
 export const test = base.extend<PageFixtures>({
@@ -115,6 +117,10 @@ export const test = base.extend<PageFixtures>({
 
   chatsPage: async ({ page }, use) => {
     await use(new ChatsPage(page));
+  },
+
+  technicalSupportPage: async ({ page }, use) => {
+    await use(new TechnicalSupportPage(page));
   },
 });
 

@@ -9,6 +9,7 @@ export class AppPage extends BasePage {
   private readonly appModule: Locator;
   private readonly direccionesReportadasLink: Locator;
   private readonly versionesAppLink: Locator;
+  private readonly chatCentralLink: Locator;
   private readonly fechaInicialInput: Locator;
   private readonly fechaFinalInput: Locator;
   private readonly buscarButton: Locator;
@@ -18,6 +19,7 @@ export class AppPage extends BasePage {
     this.appModule = this.sideNav.getByText('App', { exact: true });
     this.direccionesReportadasLink = this.sideNav.getByRole('link', { name: 'Direcciones reportadas', exact: true });
     this.versionesAppLink = this.sideNav.getByRole('link', { name: 'Versiones app', exact: true });
+    this.chatCentralLink = this.sideNav.getByRole('link', { name: /Chat central/i });
     this.fechaInicialInput = page.getByPlaceholder('Fecha inicial');
     this.fechaFinalInput = page.getByPlaceholder('Fecha final');
     this.buscarButton = page.getByRole('button', { name: 'Buscar' });
@@ -63,6 +65,18 @@ export class AppPage extends BasePage {
     await this.ensureAppMenuExpanded();
     await this.clickElement(this.versionesAppLink);
     await this.page.waitForLoadState('networkidle');
+  }
+
+  async navigateToChatCentral(): Promise<void> {
+    await this.ensureAppMenuExpanded();
+    if (await this.chatCentralLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.chatCentralLink);
+      await this.page.waitForLoadState('networkidle');
+    } else {
+      await this.goto('/app_central_chats');
+      await this.waitHelpers.waitForPageLoad();
+    }
+    await this.page.waitForURL(/app_central_chats/, { timeout: testConfig.timeouts.long });
   }
 
   async filterDireccionesByDateAndCity(fechaInicial: string, fechaFinal: string, ciudad: string): Promise<void> {
