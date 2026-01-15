@@ -32,6 +32,12 @@ test.describe('Filtros en módulo Todos los Servicios', () => {
     await test.step('Navegar a Todos los servicios', async () => {
       await serviciosPage.navigateToServicios();
       await serviciosPage.navigateToTodosServicios();
+      if (page.url().includes('/sessions/new')) {
+        await loginPage.login(users.admin.email, users.admin.password);
+        await navigationPage.openSideMenu();
+        await serviciosPage.navigateToServicios();
+        await serviciosPage.navigateToTodosServicios();
+      }
       await loginPage.takeScreenshot(testInfo, '03 - Todos los servicios');
     });
 

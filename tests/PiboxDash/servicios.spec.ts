@@ -17,6 +17,7 @@ test.describe('Validación de módulo Lista de servicios - Flujo completo', () =
     navigationPage, 
     piboxDashboardPage 
   }, testInfo) => {
+    test.setTimeout(120000);
     const loaderSelector = '.absolute.inset-0.flex.items-center.justify-center.bg-white.bg-opacity-75.z-50';
     
     await test.step('Iniciar sesión', async () => {

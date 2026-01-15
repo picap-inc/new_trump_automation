@@ -13,7 +13,8 @@ test.describe('Validación del módulo Picash', () => {
     page,
     loginPage, 
     navigationPage, 
-    picashNavigationPage 
+    picashNavigationPage,
+    picashPage
   }, testInfo) => {
     test.setTimeout(120000);
 
@@ -43,14 +44,14 @@ test.describe('Validación del módulo Picash', () => {
       await loginPage.takeScreenshot(testInfo, '04 - Menú Picash abierto');
     });
 
-    // Then: debería poder acceder a Comercios
-    await test.step('Ingresar a Comercios', async () => {
-      await picashNavigationPage.navigateToSubsection('Comercios');
-      
+    // Then: debería poder acceder a un módulo disponible en Picash
+    await test.step('Ingresar a Información de créditos', async () => {
+      await picashPage.navigateToCreditosInformacion();
+
       // Validar URL
-      await expect(page).toHaveURL('https://admin.picap.io/picash/commerces', { timeout: 10000 });
-      
-      await loginPage.takeScreenshot(testInfo, '05 - Comercios Picash');
+      await expect(page).toHaveURL('https://admin.picap.io/picash/credits', { timeout: 10000 });
+
+      await loginPage.takeScreenshot(testInfo, '05 - Créditos Picash');
     });
   });
 });

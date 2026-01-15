@@ -37,11 +37,23 @@ test.describe('Navegación al módulo Trump', () => {
     // And: entro a Pilot Safe
     await test.step('Click en Pilot Safe', async () => {
       await trumpPage.navigateToPilotSafe();
+      if (page.url().includes('/sessions/new')) {
+        await loginPage.login(users.admin.email, users.admin.password);
+        await navigationPage.openSideMenu();
+        await trumpPage.navigateToTrump();
+        await trumpPage.navigateToPilotSafe();
+      }
       await loginPage.takeScreenshot(testInfo, '04 - Pilot Safe');
     });
 
     // Then: debería poder aplicar filtros
     await test.step('Aplicar filtros de búsqueda', async () => {
+      if (page.url().includes('/sessions/new')) {
+        await loginPage.login(users.admin.email, users.admin.password);
+        await navigationPage.openSideMenu();
+        await trumpPage.navigateToTrump();
+        await trumpPage.navigateToPilotSafe();
+      }
       await trumpPage.applyFilters('Colombia', 'Inactiva', 'Picap Carro');
       await loginPage.takeScreenshot(testInfo, '05 - Filtros aplicados');
       

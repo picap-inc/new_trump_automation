@@ -16,9 +16,9 @@ export class MarketingPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.marketingModule = page.locator('#mySidenav').getByText('Marketing y growth');
-    this.campaignsLink = page.getByRole('link', { name: 'Campañas' });
-    this.dashboardLink = page.getByRole('link', { name: 'Dashboard', exact: true });
+    this.marketingModule = this.sideNav.getByText('Marketing y growth', { exact: true });
+    this.campaignsLink = this.sideNav.getByRole('link', { name: 'Campañas', exact: true });
+    this.dashboardLink = this.sideNav.getByRole('link', { name: 'Dashboard', exact: true });
     this.fromDateInput = page.getByRole('textbox', { name: 'Desde' });
     this.toDateInput = page.getByRole('textbox', { name: 'Hasta' });
     this.campaignStatusSelect = page.locator('#campaign_status');
@@ -29,31 +29,33 @@ export class MarketingPage extends BasePage {
    * Navega al módulo de Marketing desde el menú lateral
    */
   async navigateToMarketing(): Promise<void> {
+    await this.ensureMarketingExpanded();
+  }
+
+  protected async ensureMarketingExpanded(): Promise<void> {
+    if (await this.dashboardLink.isVisible().catch(() => false)) {
+      return;
+    }
+
     await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.marketingModule);
-    // Esperar a que se expanda el submenú
-    await this.waitHelpers.wait(1000);
+    await this.forceClick(this.marketingModule);
+    await this.waitHelpers.waitWithRetry(async () => {
+      await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    }, 3);
   }
 
   /**
    * Navega a la sección de Campañas
    */
   async navigateToCampaigns(): Promise<void> {
-    await expect(this.campaignsLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.campaignsLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(1500);
-    await this.expectURL('https://admin.picap.io/campaigns');
+    await this.clickAndWaitForURL(this.campaignsLink, 'https://admin.picap.io/campaigns');
   }
 
   /**
    * Navega al Dashboard de Marketing
    */
   async navigateToDashboard(): Promise<void> {
-    await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.dashboardLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(1500);
+    await this.clickAndWaitForURL(this.dashboardLink, 'https://admin.picap.io/marketing_dashboard');
   }
 
   /**
