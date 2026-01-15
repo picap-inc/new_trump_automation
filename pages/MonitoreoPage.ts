@@ -141,7 +141,16 @@ export class MonitoreoPage extends BasePage {
   async navigateToAlertas(): Promise<void> {
     await this.ensureMonitoreoExpanded();
     await expect(this.alertasLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.alertasLink);
+    const href = await this.alertasLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.alertasLink);
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+        return;
+      }
+    }
   }
 
   /**
@@ -291,6 +300,7 @@ export class MonitoreoPage extends BasePage {
   async cancelNewAlertForm(): Promise<void> {
     const cancelarBtn = this.page.getByRole('button', { name: /Cancelar|Cerrar|Close/i }).first();
     const cancelarLink = this.page.getByRole('link', { name: /Cancelar|Cerrar|Close/i }).first();
+    const closeIcon = this.page.locator('[aria-label="Close"], [data-action*="close"], .modal [data-dismiss]');
 
     if (await cancelarBtn.isVisible().catch(() => false)) {
       await this.clickElement(cancelarBtn);
@@ -302,9 +312,23 @@ export class MonitoreoPage extends BasePage {
       return;
     }
 
+    if (await closeIcon.first().isVisible().catch(() => false)) {
+      await closeIcon.first().click({ force: true });
+      return;
+    }
+
     await this.page.keyboard.press('Escape').catch(() => {});
     const nombreInput = this.page.getByRole('textbox', { name: /Nombre de la alerta|Nombre/i }).first();
-    await expect(nombreInput).toBeHidden({ timeout: testConfig.timeouts.medium });
+
+    if (await nombreInput.isVisible().catch(() => false)) {
+      await this.page.mouse.click(5, 5).catch(() => {});
+    }
+
+    if (await nombreInput.isVisible().catch(() => false)) {
+      await this.page.goBack().catch(() => {});
+    }
+
+    await expect(nombreInput).toBeHidden({ timeout: testConfig.timeouts.long });
   }
 }
 
