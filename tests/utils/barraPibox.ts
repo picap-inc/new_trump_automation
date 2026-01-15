@@ -11,22 +11,22 @@ import { Page, expect } from "@playwright/test";
 
 export async function barraPibox(page: Page, screenshotName?: string, folder?: string): Promise<void> {
   const menuButton = page.locator("#ham-menu");
+  const sideNav = page.locator("#mySidenav");
   
   console.log("📦 Verificando estado del menú lateral de Pibox...");
 
   const isVisible = await menuButton.isVisible();
 
   if (isVisible) {
-    console.log("⏳ Esperando 5 segundos para que la página cargue completamente...");
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
 
     console.log("🟢 Botón visible. Intentando abrir menú...");
     await menuButton.scrollIntoViewIfNeeded();
     await menuButton.hover();
     // Force click: data-action puede interferir
     await menuButton.click({ force: true });
-    
-    await page.waitForTimeout(1500);
+    await expect(sideNav).toBeVisible({ timeout: 10000 });
   } else {
     console.log("ℹ️ Botón de menú no visible. Posiblemente ya está abierto.");
   }

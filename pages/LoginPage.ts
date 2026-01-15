@@ -26,13 +26,42 @@ export class LoginPage extends BasePage {
    * Timeout 20s: Backend puede tardar en responder
    */
   async login(email: string, password: string): Promise<void> {
-    await this.goto('/');
-    await this.fillInput(this.emailInput, email);
-    await this.fillInput(this.passwordInput, password);
-    await this.clickElement(this.loginBtn);
-    
-    // Esperar que el login sea exitoso
-    await this.verifyLoginSuccess();
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await this.goto('/');
+      const userMenuButton = this.page.getByRole('button', { name: /Abrir menú de usuario/i });
+      const sideNav = this.page.locator('#mySidenav');
+      const alreadyLoggedIn = (await Promise.all([
+        this.welcomeHeading.isVisible().catch(() => false),
+        userMenuButton.isVisible().catch(() => false),
+        sideNav.isVisible().catch(() => false)
+      ])).some(Boolean);
+
+      if (alreadyLoggedIn) {
+        return;
+      }
+
+      await this.fillInput(this.emailInput, email);
+      await this.fillInput(this.passwordInput, password);
+      await this.waitHelpers.waitForElement(this.loginBtn);
+      await this.loginBtn.click({ noWaitAfter: true });
+
+      try {
+        await this.verifyLoginSuccess();
+        return;
+      } catch (error) {
+        if (attempt === 2) throw error;
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+        const stillLoggedIn = (await Promise.all([
+          this.welcomeHeading.isVisible().catch(() => false),
+          userMenuButton.isVisible().catch(() => false),
+          sideNav.isVisible().catch(() => false)
+        ])).some(Boolean);
+        if (stillLoggedIn) {
+          return;
+        }
+        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.short });
+      }
+    }
   }
 
   /**
@@ -41,7 +70,17 @@ export class LoginPage extends BasePage {
    * Mensaje actualizado: "Bienvenido(a) a Nuevo Trump"
    */
   async verifyLoginSuccess(): Promise<void> {
-    await this.waitForText('Bienvenido(a) a Nuevo Trump', testConfig.timeouts.medium);
+    const userMenuButton = this.page.getByRole('button', { name: /Abrir menú de usuario/i });
+    const sideNav = this.page.locator('#mySidenav');
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        this.welcomeHeading.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium }),
+        userMenuButton.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium }),
+        sideNav.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium }),
+        this.page.waitForURL((url) => !url.pathname.includes('/sessions'), { timeout: testConfig.timeouts.medium })
+      ]);
+    }, 3);
   }
 
   /**

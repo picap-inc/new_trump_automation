@@ -30,6 +30,12 @@ export class NavigationPage extends BasePage {
   async openSideMenu(): Promise<void> {
     console.log('🔍 Esperando que el botón del menú esté disponible...');
 
+    const hasVisibleLinks = await this.sideNav.getByRole('link').first().isVisible().catch(() => false);
+    if (hasVisibleLinks) {
+      console.log('✅ Menú lateral ya está visible.');
+      return;
+    }
+
     await this.page.waitForLoadState('domcontentloaded');
     await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => {});
     await this.page
@@ -68,7 +74,7 @@ export class NavigationPage extends BasePage {
       } catch (error) {
         console.warn(`Click intento ${i + 1} falló, reintentando...`);
         if (i < 2) {
-          await this.waitHelpers.wait(1000);
+          await expect(this.menuButton).toBeVisible({ timeout: testConfig.timeouts.short });
         }
       }
     }
@@ -87,7 +93,7 @@ export class NavigationPage extends BasePage {
           menuVisible = true;
           break;
         } catch (_) {
-          await this.waitHelpers.wait(300);
+          await expect(this.menuButton).toBeVisible({ timeout: testConfig.timeouts.short });
         }
       }
     }
@@ -126,11 +132,8 @@ export class NavigationPage extends BasePage {
     for (let i = 0; i < maxAttempts; i++) {
       try {
         await this.clickElement(this.profileButton);
-        await this.waitHelpers.wait(testConfig.waits.shortDelay);
-        
-        if (await this.logoutLink.isVisible()) {
-          break;
-        }
+        await expect(this.logoutLink).toBeVisible({ timeout: testConfig.timeouts.short });
+        break;
       } catch (error) {
         console.warn(`Intento ${i + 1} fallido al abrir menú de usuario.`);
         if (i === maxAttempts - 1) throw error;

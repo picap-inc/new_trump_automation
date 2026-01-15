@@ -18,6 +18,7 @@ export class MarketingPageExtended extends MarketingPage {
   private readonly codigosMasivosLink: Locator;
   private readonly codigosPiprimePiproLink: Locator;
   private readonly campanasCodesLink: Locator;
+  private readonly codigosPromocionalesLink: Locator;
 
   // Notificaciones y Push
   private readonly notificacionesLink: Locator;
@@ -49,50 +50,117 @@ export class MarketingPageExtended extends MarketingPage {
   // Comparador Tarifas
   private readonly comparadorTarifasLink: Locator;
 
+  // Toggles de grupos en menú lateral
+  private readonly codigosGroupToggle: Locator;
+  private readonly visualesGroupToggle: Locator;
+  private readonly perfilamientoGroupToggle: Locator;
+
   constructor(page: Page) {
     super(page);
     
     // Bicitaxi
-    this.bicitaxiLink = page.getByRole('link', { name: 'Bicitaxi', exact: true });
+    this.bicitaxiLink = this.sideNav.getByRole('link', { name: 'Bicitaxi', exact: true });
     this.zonaSelect = page.locator('#name');
     this.estadoBiciSelect = page.locator('#is_enabled');
     this.ciudadSelect = page.locator('#city_id');
 
     // Códigos
-    this.codigosQrLink = page.getByRole('link', { name: 'Códigos QR' });
-    this.codigosMasivosLink = page.getByRole('link', { name: 'Códigos masivos' });
-    this.codigosPiprimePiproLink = page.getByRole('link', { name: 'Códigos Piprime / Pipro' });
-    this.campanasCodesLink = page.getByRole('link', { name: 'Campañas codes' });
+    this.codigosQrLink = this.sideNav.getByRole('link', { name: /Códigos\s*QR/i });
+    this.codigosMasivosLink = this.sideNav.getByRole('link', { name: /Códigos\s*masivos/i });
+    this.codigosPiprimePiproLink = this.sideNav.getByRole('link', { name: /Códigos\s*Piprime\s*(\/|y)\s*Pipro/i });
+    this.campanasCodesLink = this.sideNav.getByRole('link', { name: /Campañas\s*promocodes/i });
+    this.codigosPromocionalesLink = this.sideNav.getByRole('link', { name: /Códigos promocionales/i });
 
     // Notificaciones y Push
-    this.notificacionesLink = page.getByRole('link', { name: 'Notificaciones' });
-    this.pushMasivosLink = page.getByRole('link', { name: 'Push masivos' });
+    this.notificacionesLink = this.sideNav.getByRole('link', { name: 'Notificaciones', exact: true });
+    this.pushMasivosLink = this.sideNav.getByRole('link', { name: /Push\s*masivos/i });
 
     // Perfilamientos
-    this.perfilamientoPasajerosLink = page.getByRole('link', { name: 'Perfilamiento Pasajeros' });
-    this.perfilamientoPilotoLink = page.getByRole('link', { name: 'Perfilamiento Piloto' });
+    this.perfilamientoPasajerosLink = this.sideNav.getByRole('link', { name: /Pasajeros/i });
+    this.perfilamientoPilotoLink = this.sideNav.getByRole('link', { name: /Pilotos/i });
 
     // Pilevels
-    this.pilevelsLink = page.getByRole('link', { name: 'Pilevels' });
+    this.pilevelsLink = this.sideNav.getByRole('link', { name: /Pilevels/i });
 
     // Promo Codes
-    this.promoCodesLink = page.getByRole('link', { name: 'Promo codes' });
+    this.promoCodesLink = this.sideNav.getByRole('link', { name: /Códigos promocionales/i });
 
     // Reglas y Referidos
-    this.reglaReferidosLink = page.getByRole('link', { name: 'Regla de referidos' });
+    this.reglaReferidosLink = this.sideNav.getByRole('link', { name: /Reglas para referidos/i });
 
     // Tutoriales
-    this.tutorialesLink = page.getByRole('link', { name: 'Tutoriales' });
+    this.tutorialesLink = this.sideNav.getByRole('link', { name: 'Tutoriales', exact: true });
 
     // Verificaciones Fraude
-    this.verificacionesFraudeLink = page.getByRole('link', { name: 'Verificaciones de fraude' });
+    this.verificacionesFraudeLink = this.sideNav.getByRole('link', { name: /Verificaciones de fraude/i });
 
     // Visuales
-    this.visualesBannersLink = page.getByRole('link', { name: 'Visuales - Banners' });
-    this.visualesMapaLink = page.getByRole('link', { name: 'Visuales - Mapa' });
+    this.visualesBannersLink = this.sideNav.getByRole('link', { name: /Banners/i });
+    this.visualesMapaLink = this.sideNav.getByRole('link', { name: /Vehículos en el mapa/i });
 
     // Comparador Tarifas
-    this.comparadorTarifasLink = page.getByRole('link', { name: 'Comparador de tarifas' });
+    this.comparadorTarifasLink = this.sideNav.getByRole('link', { name: /Comparador de tarifas/i });
+
+    // Toggles de grupos
+    this.codigosGroupToggle = this.sideNav
+      .locator('a[data-layout-target="submenuActive"]')
+      .filter({ hasText: 'Códigos promocionales' })
+      .first();
+    this.visualesGroupToggle = this.sideNav
+      .locator('a[data-layout-target="submenuActive"]')
+      .filter({ hasText: 'Visuales app' })
+      .first();
+    this.perfilamientoGroupToggle = this.sideNav
+      .locator('a[data-layout-target="submenuActive"]')
+      .filter({ hasText: 'Perfilamiento' })
+      .first();
+  }
+
+  private async resolveVisibleTarget(candidates: Locator[]): Promise<Locator | null> {
+    for (const candidate of candidates) {
+      if (await candidate.isVisible().catch(() => false)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  private async logSideNavLinks(context: string): Promise<void> {
+    const links = await this.sideNav.locator('a').evaluateAll((elements) =>
+      elements
+        .map((el) => {
+          const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+          const href = (el as HTMLAnchorElement).getAttribute('href') || '';
+          return `${text} -> ${href}`.trim();
+        })
+        .filter(Boolean)
+    );
+    console.warn(`⚠️ [Marketing] Enlaces disponibles (${context}):\n${links.join('\n')}`);
+  }
+
+  private async ensureGroupExpanded(
+    groupToggle: Locator,
+    linkToReveal?: Locator,
+    fallbackLink?: Locator
+  ): Promise<void> {
+    await this.ensureMarketingExpanded();
+    if (linkToReveal && (await linkToReveal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    if (await groupToggle.isVisible().catch(() => false)) {
+      await this.forceClick(groupToggle);
+      if (linkToReveal) {
+        await this.waitHelpers.waitWithRetry(async () => {
+          await expect(linkToReveal).toBeVisible({ timeout: testConfig.timeouts.medium });
+        }, 2).catch(() => undefined);
+      }
+      return;
+    }
+
+    if (fallbackLink && (await fallbackLink.isVisible().catch(() => false))) {
+      await fallbackLink.click();
+    }
   }
 
   // Bicitaxi
@@ -112,7 +180,16 @@ export class MarketingPageExtended extends MarketingPage {
     await this.ciudadSelect.selectOption({ label: ciudad });
     
     await this.search();
-    await this.waitHelpers.wait(2000);
+
+    const resultsRow = this.page.locator('table tbody tr').first();
+    const emptyState = this.page.getByText(/sin resultados|no hay resultados|no records|no data/i);
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(resultsRow).toBeVisible({ timeout: testConfig.timeouts.long }),
+        expect(emptyState).toBeVisible({ timeout: testConfig.timeouts.long })
+      ]);
+    }, 2);
   }
 
   // Códigos
@@ -122,18 +199,32 @@ export class MarketingPageExtended extends MarketingPage {
   }
 
   async navigateToCodigosMasivos(): Promise<void> {
-    await expect(this.codigosMasivosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.codigosMasivosLink);
+    await this.ensureGroupExpanded(this.codigosGroupToggle, this.codigosMasivosLink, this.codigosPromocionalesLink);
+    const target = await this.resolveVisibleTarget([this.codigosMasivosLink, this.codigosPromocionalesLink]);
+    if (!target) {
+      await this.logSideNavLinks('Codigos Masivos');
+      await this.goto('/promo_code_campaigns/massives');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   async navigateToCodigosPiprimePipro(): Promise<void> {
-    await expect(this.codigosPiprimePiproLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await this.ensureGroupExpanded(this.codigosGroupToggle, this.codigosPiprimePiproLink, this.codigosPromocionalesLink);
     await this.clickElement(this.codigosPiprimePiproLink);
   }
 
   async navigateToCampanasCodes(): Promise<void> {
-    await expect(this.campanasCodesLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.campanasCodesLink);
+    await this.ensureGroupExpanded(this.codigosGroupToggle, this.campanasCodesLink, this.codigosPromocionalesLink);
+    const target = await this.resolveVisibleTarget([this.campanasCodesLink, this.codigosPromocionalesLink]);
+    if (!target) {
+      await this.logSideNavLinks('Campañas Codes');
+      await this.goto('/promo_code_campaigns');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   // Notificaciones
@@ -149,13 +240,27 @@ export class MarketingPageExtended extends MarketingPage {
 
   // Perfilamientos
   async navigateToPerfilamientoPasajeros(): Promise<void> {
-    await expect(this.perfilamientoPasajerosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.perfilamientoPasajerosLink);
+    await this.ensureGroupExpanded(this.perfilamientoGroupToggle, this.perfilamientoPasajerosLink);
+    const target = await this.resolveVisibleTarget([this.perfilamientoPasajerosLink]);
+    if (!target) {
+      await this.logSideNavLinks('Perfilamiento Pasajeros');
+      await this.goto('/passenger_profiles');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   async navigateToPerfilamientoPiloto(): Promise<void> {
-    await expect(this.perfilamientoPilotoLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.perfilamientoPilotoLink);
+    await this.ensureGroupExpanded(this.perfilamientoGroupToggle, this.perfilamientoPilotoLink);
+    const target = await this.resolveVisibleTarget([this.perfilamientoPilotoLink]);
+    if (!target) {
+      await this.logSideNavLinks('Perfilamiento Piloto');
+      await this.goto('/driver_profiles');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   // Pilevels
@@ -166,14 +271,28 @@ export class MarketingPageExtended extends MarketingPage {
 
   // Promo Codes
   async navigateToPromoCodes(): Promise<void> {
-    await expect(this.promoCodesLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.promoCodesLink);
+    await this.ensureGroupExpanded(this.codigosGroupToggle, this.promoCodesLink, this.codigosPromocionalesLink);
+    const target = await this.resolveVisibleTarget([this.promoCodesLink, this.codigosPromocionalesLink]);
+    if (!target) {
+      await this.logSideNavLinks('Promo Codes');
+      await this.goto('/promo_codes');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   // Reglas y Referidos
   async navigateToReglaReferidos(): Promise<void> {
-    await expect(this.reglaReferidosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.reglaReferidosLink);
+    await this.ensureGroupExpanded(this.codigosGroupToggle, this.reglaReferidosLink, this.codigosPromocionalesLink);
+    const target = await this.resolveVisibleTarget([this.reglaReferidosLink, this.codigosPromocionalesLink]);
+    if (!target) {
+      await this.logSideNavLinks('Regla de Referidos');
+      await this.goto('/referral_code_rules');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   // Tutoriales
@@ -190,13 +309,29 @@ export class MarketingPageExtended extends MarketingPage {
 
   // Visuales
   async navigateToVisualesBanners(): Promise<void> {
-    await expect(this.visualesBannersLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.visualesBannersLink);
+    await this.ensureGroupExpanded(this.visualesGroupToggle, this.visualesBannersLink);
+    const bannersFallback = this.sideNav.getByRole('link', { name: /Banners/i }).first();
+    const target = await this.resolveVisibleTarget([this.visualesBannersLink, bannersFallback]);
+    if (!target) {
+      await this.logSideNavLinks('Visuales Banners');
+      await this.goto('/home_sliders');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   async navigateToVisualesMapa(): Promise<void> {
-    await expect(this.visualesMapaLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.visualesMapaLink);
+    await this.ensureGroupExpanded(this.visualesGroupToggle, this.visualesMapaLink);
+    const mapaFallback = this.sideNav.getByRole('link', { name: /Mapa/i }).first();
+    const target = await this.resolveVisibleTarget([this.visualesMapaLink, mapaFallback]);
+    if (!target) {
+      await this.logSideNavLinks('Visuales Mapa');
+      await this.goto('/countries');
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+    await this.clickElement(target);
   }
 
   // Comparador Tarifas

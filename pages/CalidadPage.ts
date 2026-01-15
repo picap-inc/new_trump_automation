@@ -17,9 +17,9 @@ export class CalidadPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.calidadModule = page.locator('#mySidenav').getByText('Calidad', { exact: true });
-    this.dashboardLink = page.getByRole('link', { name: 'Dashboard Calidad' });
-    this.matrizLink = page.getByRole('link', { name: 'Matriz de Calidad' });
+    this.calidadModule = this.sideNav.getByText('Calidad', { exact: true });
+    this.dashboardLink = this.sideNav.getByRole('link', { name: /Dashboard Calidad/i });
+    this.matrizLink = this.sideNav.getByRole('link', { name: /Matriz de Calidad/i });
     this.dateTrigger = page.locator('[data-quality-dashboard-target="AuditsQuantityDate"]');
     this.calendar = page.locator('.flatpickr-calendar.open');
     this.procesoSelect = page.locator('#list_matrix_audit_frame #quality_process_id');
@@ -58,21 +58,24 @@ export class CalidadPage extends BasePage {
     await expect(this.procesoSelect).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.procesoSelect.selectOption({ label: proceso });
     
-    // Esperar a que se aplique el filtro
-    await this.waitHelpers.wait(1000);
-    
-    await expect(this.buscarButton).toBeEnabled();
+    await expect(this.buscarButton).toBeEnabled({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.buscarButton);
     
     // Esperar a que se carguen los resultados
     await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
-    
-    await expect(this.auditoriasButton).toBeVisible({ timeout: testConfig.timeouts.medium });
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await expect(this.auditoriasButton).toBeVisible({ timeout: testConfig.timeouts.long });
+    }, 2);
     await this.clickElement(this.auditoriasButton);
     
-    // Esperar a que se abra el modal/página de auditorías
-    await this.waitHelpers.wait(2000);
+    const dialog = this.page.locator('[role="dialog"], .modal, .MuiDialog-root').first();
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(dialog).toBeVisible({ timeout: testConfig.timeouts.long }),
+        this.page.waitForLoadState('networkidle')
+      ]);
+    }, 2);
   }
 
   /**
@@ -103,8 +106,7 @@ export class CalidadPage extends BasePage {
     await expect(diaHoy).toBeVisible({ timeout: 5000 });
     await this.clickElement(diaHoy);
 
-    // Esperar a que se aplique el cambio
-    await this.waitHelpers.wait(2000);
+    await expect(this.calendar).toBeHidden({ timeout: testConfig.timeouts.medium });
   }
 }
 

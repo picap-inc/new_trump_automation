@@ -25,8 +25,7 @@ export class ServiciosPage extends BasePage {
   async navigateToServicios(): Promise<void> {
     await expect(this.serviciosModule).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.serviciosModule);
-    // Esperar a que se expanda el submenú
-    await this.waitHelpers.wait(1000);
+    await expect(this.todosServiciosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
   }
 
   /**
@@ -37,7 +36,7 @@ export class ServiciosPage extends BasePage {
     await this.clickElement(this.todosServiciosLink);
     // Esperar a que cargue la página
     await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(1500);
+    await this.page.waitForURL(/\/bookings$/, { timeout: testConfig.timeouts.long });
     await this.expectURL('https://admin.picap.io/bookings');
   }
 
@@ -49,7 +48,7 @@ export class ServiciosPage extends BasePage {
     await this.clickElement(this.pqrsLink);
     // Esperar a que cargue la página de PQRS
     await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(1500);
+    await this.page.waitForURL(/\/pqrs$/, { timeout: testConfig.timeouts.long });
   }
 
   /**
@@ -60,7 +59,6 @@ export class ServiciosPage extends BasePage {
     await this.clickElement(this.cardsPqrsLink);
     // Esperar a que cargue la página de Cards PQRS
     await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
   }
 
   /**

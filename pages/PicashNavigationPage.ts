@@ -14,16 +14,14 @@ export class PicashNavigationPage extends BasePage {
     super(page);
     this.menuButton = page.locator('#ham-menu');
     this.picashHeading = page.getByRole('heading', { name: 'Picash', exact: true });
-    this.picashModuleLink = page.getByRole('link', { name: 'home Picash' });
+    this.picashModuleLink = this.sideNav.getByRole('link', { name: /Picash/i });
   }
 
   /**
    * Navega al módulo Picash desde el menú principal
    */
   async navigateToPicashModule(): Promise<void> {
-    await expect(this.picashModuleLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.picashModuleLink);
-    await this.expectURL('https://admin.picap.io/picash/');
+    await this.clickAndWaitForURL(this.picashModuleLink, /\/picash\/?$/);
   }
 
   /**
@@ -38,8 +36,8 @@ export class PicashNavigationPage extends BasePage {
     const isVisible = await this.menuButton.isVisible();
 
     if (isVisible) {
-      console.log('⏳ Esperando carga completa de la página (5s)...');
-      await this.waitHelpers.wait(testConfig.waits.afterLogin);
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => {});
 
       console.log('🟢 Botón visible. Intentando abrir menú...');
       await this.menuButton.scrollIntoViewIfNeeded();
@@ -47,13 +45,20 @@ export class PicashNavigationPage extends BasePage {
       
       // Click con force para evitar problemas con data-action
       await this.menuButton.click({ force: true });
-      await this.waitHelpers.wait(testConfig.waits.menuAnimation);
     } else {
       console.log('ℹ️ Botón de menú no visible. Posiblemente ya está abierto.');
     }
 
-    console.log('🔍 Esperando validación por heading "Picash"...');
-    await expect(this.picashHeading).toBeVisible({ timeout: 7000 });
+    console.log('🔍 Validando contexto Picash...');
+    const picashLink = this.page.getByRole('link', { name: /Compras|Créditos|Dispositivos|Picash/i }).first();
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        this.picashHeading.waitFor({ state: 'visible', timeout: 7000 }),
+        picashLink.waitFor({ state: 'visible', timeout: 7000 }),
+        this.page.waitForURL(/\/picash/, { timeout: 7000 })
+      ]);
+    }, 2);
 
     console.log('✅ Menú lateral de Picash verificado correctamente.');
   }
@@ -62,9 +67,32 @@ export class PicashNavigationPage extends BasePage {
    * Navega a una subsección de Picash
    */
   async navigateToSubsection(subsectionName: string): Promise<void> {
-    const subsectionLink = this.page.getByRole('link', { name: subsectionName });
-    await expect(subsectionLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(subsectionLink);
+    const subsectionLink = this.page.getByRole('link', { name: subsectionName }).first();
+
+    if (await subsectionLink.isVisible().catch(() => false)) {
+      await this.clickElement(subsectionLink);
+      return;
+    }
+
+    const href = await subsectionLink.getAttribute('href').catch(() => null);
+    if (href) {
+      await this.goto(href);
+      await this.waitHelpers.waitForPageLoad();
+      return;
+    }
+
+    const links = await this.page.locator('a').evaluateAll((elements) =>
+      elements
+        .map((el) => {
+          const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+          const hrefValue = (el as HTMLAnchorElement).getAttribute('href') || '';
+          return `${text} -> ${hrefValue}`.trim();
+        })
+        .filter((value) => value && value !== '->')
+    );
+    console.warn(`⚠️ [Picash] Enlaces disponibles:\n${links.join('\n')}`);
+
+    throw new Error(`No se encontró la subsección "${subsectionName}" en Picash.`);
   }
 
   /**

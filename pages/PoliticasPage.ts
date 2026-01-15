@@ -11,22 +11,21 @@ export class PoliticasPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.politicasModule = page.locator('#mySidenav').getByText('Políticas', { exact: true });
-    this.tcLink = page.getByRole('link', { name: 'T&C' });
+    this.politicasModule = this.sideNav.getByText('Políticas internas', { exact: true });
+    this.tcLink = this.sideNav.getByRole('link', { name: /T&C/i });
   }
 
   async navigateToPoliticas(): Promise<void> {
     await expect(this.politicasModule).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.politicasModule);
-    // Esperar a que se expanda el submenú
-    await this.waitHelpers.wait(1000);
+    await expect(this.tcLink).toBeVisible({ timeout: testConfig.timeouts.medium });
   }
 
   async navigateToTC(): Promise<void> {
     await expect(this.tcLink).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.tcLink);
     await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(1500);
+    await this.page.waitForURL(/terms_and_conditions/, { timeout: testConfig.timeouts.long });
   }
 }
 

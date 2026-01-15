@@ -56,7 +56,7 @@ export class UsuariosPage extends BasePage {
         break;
       } catch (e) {
         await this.waitForLoading();
-        await this.waitHelpers.wait(500);
+        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
         if (i === maxAttempts - 1) throw e;
       }
     }
@@ -123,7 +123,7 @@ export class UsuariosPage extends BasePage {
       await sideNavLink.first().scrollIntoViewIfNeeded();
       await expect(sideNavLink.first()).toBeVisible({ timeout: testConfig.timeouts.long });
       await this.clickWithRetry(sideNavLink.first());
-      await this.waitHelpers.wait(1000);
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
       return;
     }
 
@@ -133,7 +133,7 @@ export class UsuariosPage extends BasePage {
 
     await expect(target).toBeVisible({ timeout: testConfig.timeouts.long });
     await this.clickWithRetry(target);
-    await this.waitHelpers.wait(1000);
+    await this.page.waitForLoadState('networkidle').catch(() => undefined);
   }
 
   async clickActionInFirstRow(actionIndex: number = 3): Promise<void> {

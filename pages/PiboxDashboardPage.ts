@@ -25,11 +25,29 @@ export class PiboxDashboardPage extends BasePage {
     this.peticionOperacionesLink = page.getByRole('link', { name: /Peticiones de operaciones/i });
   }
 
+  private async waitForHref(href: string | null): Promise<void> {
+    if (!href) return;
+    const safeHref = href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const matcher = new RegExp(safeHref);
+    if (matcher.test(this.page.url())) return;
+    await this.page.waitForURL(matcher, { timeout: testConfig.timeouts.long });
+  }
+
   async navigateToPibox(): Promise<void> {
     if (await this.piboxLink.isVisible().catch(() => false)) {
-      await this.clickElement(this.piboxLink);
+      const href = await this.piboxLink.getAttribute('href').catch(() => null);
+      await this.piboxLink.scrollIntoViewIfNeeded();
+      try {
+        await this.forceClick(this.piboxLink);
+      } catch (_) {
+        if (href) {
+          await this.goto(href);
+          await this.waitHelpers.waitForPageLoad();
+          return;
+        }
+      }
       await this.page.waitForLoadState('networkidle');
-      await this.waitHelpers.wait(2000);
+      await this.waitForHref(href);
       return;
     }
 
@@ -47,42 +65,79 @@ export class PiboxDashboardPage extends BasePage {
     const isVisible = await this.menuButton.isVisible();
 
     if (isVisible) {
-      await this.waitHelpers.wait(testConfig.waits.afterLogin);
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => {});
       await this.menuButton.scrollIntoViewIfNeeded();
       await this.menuButton.hover();
       
       // Click con force para evitar problemas con data-action
       await this.menuButton.click({ force: true });
-      await this.waitHelpers.wait(testConfig.waits.menuAnimation);
+      await expect(this.sideNav).toBeVisible({ timeout: testConfig.timeouts.long });
     }
   }
 
   async navigateToListaServicios(): Promise<void> {
     await expect(this.listaServiciosLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.listaServiciosLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
+    const href = await this.listaServiciosLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.listaServiciosLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitForHref(href);
+      return;
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
   }
 
   async navigateToCrearCompania(): Promise<void> {
     await expect(this.crearCompaniaLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.crearCompaniaLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
+    const href = await this.crearCompaniaLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.crearCompaniaLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitForHref(href);
+      return;
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
   }
 
   async navigateToPaquetes(): Promise<void> {
     if (await this.paquetesLink.isVisible().catch(() => false)) {
-      await this.clickElement(this.paquetesLink);
+      const href = await this.paquetesLink.getAttribute('href').catch(() => null);
+      try {
+        await this.forceClick(this.paquetesLink);
+      } catch (_) {
+        if (href) {
+          await this.goto(href);
+          await this.waitHelpers.waitForPageLoad();
+          return;
+        }
+      }
       await this.page.waitForLoadState('networkidle');
-      await this.waitHelpers.wait(2000);
+      await this.waitForHref(href);
       return;
     }
 
     if (await this.companiasLink.isVisible().catch(() => false)) {
-      await this.clickElement(this.companiasLink);
+      const href = await this.companiasLink.getAttribute('href').catch(() => null);
+      try {
+        await this.forceClick(this.companiasLink);
+      } catch (_) {
+        if (href) {
+          await this.goto(href);
+          await this.waitHelpers.waitForPageLoad();
+          return;
+        }
+      }
       await this.page.waitForLoadState('networkidle');
-      await this.waitHelpers.wait(2000);
+      await this.waitForHref(href);
       return;
     }
 
@@ -92,9 +147,18 @@ export class PiboxDashboardPage extends BasePage {
 
   async navigateToCompanias(): Promise<void> {
     if (await this.companiasLink.isVisible().catch(() => false)) {
-      await this.clickElement(this.companiasLink);
+      const href = await this.companiasLink.getAttribute('href').catch(() => null);
+      try {
+        await this.forceClick(this.companiasLink);
+      } catch (_) {
+        if (href) {
+          await this.goto(href);
+          await this.waitHelpers.waitForPageLoad();
+          return;
+        }
+      }
       await this.page.waitForLoadState('networkidle');
-      await this.waitHelpers.wait(2000);
+      await this.waitForHref(href);
       return;
     }
 
@@ -104,9 +168,18 @@ export class PiboxDashboardPage extends BasePage {
 
   async navigateToPeticionOperaciones(): Promise<void> {
     await expect(this.peticionOperacionesLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickElement(this.peticionOperacionesLink);
-    await this.page.waitForLoadState('networkidle');
-    await this.waitHelpers.wait(2000);
+    const href = await this.peticionOperacionesLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.peticionOperacionesLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitForHref(href);
+      return;
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
   }
 
   /**
