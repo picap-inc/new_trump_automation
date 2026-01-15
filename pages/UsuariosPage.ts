@@ -11,7 +11,6 @@ export class UsuariosPage extends BasePage {
   private readonly emailInput: Locator;
   private readonly buscarButton: Locator;
   private readonly tablaUsuarios: Locator;
-  private readonly historialLink: Locator;
   private readonly cerrarHistorialButton: Locator;
 
   constructor(page: Page) {
@@ -20,7 +19,6 @@ export class UsuariosPage extends BasePage {
     this.emailInput = page.getByRole('textbox', { name: 'Email' });
     this.buscarButton = page.getByRole('button', { name: 'Buscar' });
     this.tablaUsuarios = page.getByRole('table');
-    this.historialLink = page.getByRole('link', { name: 'Historial de cambios' });
     this.cerrarHistorialButton = page.locator('span:nth-child(3) > .w-6 > path');
   }
 
@@ -84,12 +82,26 @@ export class UsuariosPage extends BasePage {
     
     await expect(this.buscarButton).toBeEnabled({ timeout: 15000 });
     await this.clickElement(this.buscarButton);
-    await this.waitHelpers.wait(2000);
+
+    const resultsRow = this.page.locator('table tbody tr').first();
+    const emptyState = this.page.getByText(/sin resultados|no hay resultados|no records|no data/i);
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(resultsRow).toBeVisible({ timeout: testConfig.timeouts.long }),
+        expect(emptyState).toBeVisible({ timeout: testConfig.timeouts.long })
+      ]);
+    }, 2);
   }
 
   async openHistorial(): Promise<void> {
-    await expect(this.historialLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.clickWithRetry(this.historialLink);
+    const historialLink = this.page
+      .locator('table tbody tr')
+      .first()
+      .getByRole('link', { name: 'Historial de cambios' });
+
+    await expect(historialLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await this.clickWithRetry(historialLink);
   }
 
   async closeHistorial(): Promise<void> {

@@ -141,8 +141,16 @@ export class AppPage extends BasePage {
     await expect(this.buscarButton).toBeVisible({ timeout: 5000 });
     await expect(this.buscarButton).toBeEnabled({ timeout: 5000 });
     await this.clickElement(this.buscarButton);
-    
-    await this.waitHelpers.wait(3000); // Esperar resultados
+
+    const resultsRow = this.page.locator('table tbody tr').first();
+    const emptyState = this.page.getByText(/sin resultados|no hay resultados|no records|no data/i);
+
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(resultsRow).toBeVisible({ timeout: testConfig.timeouts.long }),
+        expect(emptyState).toBeVisible({ timeout: testConfig.timeouts.long })
+      ]);
+    }, 2);
   }
 }
 
