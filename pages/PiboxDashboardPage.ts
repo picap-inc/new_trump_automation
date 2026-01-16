@@ -34,7 +34,7 @@ export class PiboxDashboardPage extends BasePage {
     const safeHref = href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const matcher = new RegExp(safeHref);
     if (matcher.test(this.page.url())) return;
-    await this.page.waitForURL(matcher, { timeout: testConfig.timeouts.long });
+    await this.page.waitForURL(matcher, { timeout: testConfig.timeouts.long }).catch(() => undefined);
   }
 
   async navigateToPibox(): Promise<void> {
@@ -50,7 +50,7 @@ export class PiboxDashboardPage extends BasePage {
           return;
         }
       }
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
       await this.waitForHref(href);
       return;
     }

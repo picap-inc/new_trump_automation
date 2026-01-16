@@ -44,6 +44,14 @@ export class MarketingPage extends BasePage {
       return;
     }
 
+    if (!(await this.sideNav.isVisible().catch(() => false))) {
+      const menuButton = this.page.locator('#ham-menu');
+      if (await menuButton.isVisible().catch(() => false)) {
+        await menuButton.click({ force: true });
+        await expect(this.sideNav).toBeVisible({ timeout: testConfig.timeouts.medium });
+      }
+    }
+
     await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.forceClick(this.marketingModule);
     await this.waitHelpers.waitWithRetry(async () => {
