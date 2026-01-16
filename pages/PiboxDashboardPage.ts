@@ -8,7 +8,9 @@ import { testConfig } from '../config/test-config';
 export class PiboxDashboardPage extends BasePage {
   private readonly piboxLink: Locator;
   private readonly menuButton: Locator;
+  private readonly picapDashboardLink: Locator;
   private readonly companiasLink: Locator;
+  private readonly monitoreoLink: Locator;
   private readonly listaServiciosLink: Locator;
   private readonly crearCompaniaLink: Locator;
   private readonly paquetesLink: Locator;
@@ -18,7 +20,9 @@ export class PiboxDashboardPage extends BasePage {
     super(page);
     this.piboxLink = page.getByRole('link', { name: /Pibox Dashboard/i });
     this.menuButton = page.locator('#ham-menu');
+    this.picapDashboardLink = page.getByRole('link', { name: /Picap Dashboard/i });
     this.companiasLink = page.getByRole('link', { name: /Compañías/i });
+    this.monitoreoLink = page.getByRole('link', { name: /Monitoreo/i });
     this.listaServiciosLink = page.getByRole('link', { name: /Lista de servicios/i });
     this.crearCompaniaLink = page.getByRole('link', { name: /Crear compañía/i });
     this.paquetesLink = page.getByRole('link', { name: /Paquetes/i });
@@ -171,6 +175,38 @@ export class PiboxDashboardPage extends BasePage {
     const href = await this.peticionOperacionesLink.getAttribute('href').catch(() => null);
     try {
       await this.forceClick(this.peticionOperacionesLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitForHref(href);
+      return;
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
+  }
+
+  async navigateToMonitoreo(): Promise<void> {
+    await expect(this.monitoreoLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    const href = await this.monitoreoLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.monitoreoLink);
+      await this.page.waitForLoadState('networkidle');
+      await this.waitForHref(href);
+      return;
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
+  }
+
+  async navigateToPicapDashboard(): Promise<void> {
+    await expect(this.picapDashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    const href = await this.picapDashboardLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.picapDashboardLink);
       await this.page.waitForLoadState('networkidle');
       await this.waitForHref(href);
       return;

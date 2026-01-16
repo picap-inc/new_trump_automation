@@ -37,6 +37,9 @@ export class MarketingPageExtended extends MarketingPage {
   // Reglas y Referidos
   private readonly reglaReferidosLink: Locator;
 
+  // Rachas
+  private readonly rachasLink: Locator;
+
   // Tutoriales
   private readonly tutorialesLink: Locator;
 
@@ -49,6 +52,7 @@ export class MarketingPageExtended extends MarketingPage {
 
   // Comparador Tarifas
   private readonly comparadorTarifasLink: Locator;
+  private readonly tarifaDiferencialLink: Locator;
 
   // Toggles de grupos en menú lateral
   private readonly codigosGroupToggle: Locator;
@@ -88,6 +92,9 @@ export class MarketingPageExtended extends MarketingPage {
     // Reglas y Referidos
     this.reglaReferidosLink = this.sideNav.getByRole('link', { name: /Reglas para referidos/i });
 
+    // Rachas
+    this.rachasLink = this.sideNav.getByRole('link', { name: /Rachas/i });
+
     // Tutoriales
     this.tutorialesLink = this.sideNav.getByRole('link', { name: 'Tutoriales', exact: true });
 
@@ -100,6 +107,7 @@ export class MarketingPageExtended extends MarketingPage {
 
     // Comparador Tarifas
     this.comparadorTarifasLink = this.sideNav.getByRole('link', { name: /Comparador de tarifas/i });
+    this.tarifaDiferencialLink = this.sideNav.getByRole('link', { name: /Tarifa diferencial/i });
 
     // Toggles de grupos
     this.codigosGroupToggle = this.sideNav
@@ -295,6 +303,12 @@ export class MarketingPageExtended extends MarketingPage {
     await this.clickElement(target);
   }
 
+  // Rachas
+  async navigateToRachas(): Promise<void> {
+    await expect(this.rachasLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await this.clickElement(this.rachasLink);
+  }
+
   // Tutoriales
   async navigateToTutoriales(): Promise<void> {
     await expect(this.tutorialesLink).toBeVisible({ timeout: testConfig.timeouts.medium });
@@ -338,6 +352,24 @@ export class MarketingPageExtended extends MarketingPage {
   async navigateToComparadorTarifas(): Promise<void> {
     await expect(this.comparadorTarifasLink).toBeVisible({ timeout: testConfig.timeouts.medium });
     await this.clickElement(this.comparadorTarifasLink);
+  }
+
+  async navigateToTarifaDiferencial(): Promise<void> {
+    await this.ensureMarketingExpanded();
+    await expect(this.tarifaDiferencialLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+    const href = await this.tarifaDiferencialLink.getAttribute('href').catch(() => null);
+    try {
+      await this.forceClick(this.tarifaDiferencialLink);
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+      if (href) {
+        await this.page.waitForURL(new RegExp(href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), { timeout: testConfig.timeouts.long }).catch(() => undefined);
+      }
+    } catch (_) {
+      if (href) {
+        await this.goto(href);
+        await this.waitHelpers.waitForPageLoad();
+      }
+    }
   }
 }
 

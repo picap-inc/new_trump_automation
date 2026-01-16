@@ -1,10 +1,10 @@
 name: Trump_Automation
 
 on:
-  # schedule:
-  #   - cron: "0 13 * * *"  # 8 AM Colombia
-  #   - cron: "0 17 * * *"  # 12 PM Colombia
-  #   - cron: "0 23 * * *"  # 6 PM Colombia
+  schedule:
+    - cron: "0 14 * * *"  # 9 AM Colombia
+    - cron: "0 17 * * *"  # 12 PM Colombia
+    - cron: "0 23 * * *"  # 6 PM Colombia
   workflow_dispatch: {}  # Permite ejecución manual
 
 jobs:

@@ -8,11 +8,13 @@ import { testConfig } from '../config/test-config';
 export class OnboardingPage extends BasePage {
   private readonly onboardingModule: Locator;
   private readonly onboardingDashboardLink: Locator;
+  private readonly metricasRegistroLink: Locator;
 
   constructor(page: Page) {
     super(page);
     this.onboardingModule = this.sideNav.getByText('Onboarding', { exact: true });
     this.onboardingDashboardLink = this.sideNav.getByRole('link', { name: /Onboarding dashboard/i });
+    this.metricasRegistroLink = this.sideNav.getByRole('link', { name: /Métricas de Registro/i });
   }
 
   /**
@@ -51,6 +53,14 @@ export class OnboardingPage extends BasePage {
   async navigateToUsuariosOnboarding(): Promise<void> {
     const usuariosLink = this.sideNav.getByRole('link', { name: /Usuarios onboarding/i });
     await this.clickAndWaitForURL(usuariosLink, 'https://admin.picap.io/onboardings', 17000);
+  }
+
+  async navigateToMetricasRegistro(): Promise<void> {
+    await this.clickAndWaitForURL(
+      this.metricasRegistroLink,
+      'https://admin.picap.io/driver_registration_metrics',
+      testConfig.timeouts.long
+    );
   }
 
   async filterUsuariosOnboarding(country: string, city: string, vehicleType: string): Promise<void> {

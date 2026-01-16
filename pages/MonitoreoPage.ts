@@ -8,6 +8,7 @@ import { testConfig } from '../config/test-config';
 export class MonitoreoPage extends BasePage {
   private readonly monitoreoModule: Locator;
   private readonly alertasLink: Locator;
+  private readonly revalidacionLink: Locator;
   private readonly fechaCreacionInput: Locator;
   private readonly statusSelect: Locator;
   private readonly nombreAlertaInput: Locator;
@@ -22,6 +23,7 @@ export class MonitoreoPage extends BasePage {
     super(page);
     this.monitoreoModule = this.sideNav.getByText('Monitoreo', { exact: true });
     this.alertasLink = this.sideNav.getByRole('link', { name: 'Alertas', exact: true });
+    this.revalidacionLink = this.sideNav.getByRole('link', { name: /Revalidación/i });
     this.fechaCreacionInput = page.getByRole('textbox', { name: 'Fecha de creación' });
     this.statusSelect = page.locator('#status_cd');
     this.nombreAlertaInput = page.getByRole('textbox', { name: 'Nombre de la alerta' });
@@ -151,6 +153,17 @@ export class MonitoreoPage extends BasePage {
         return;
       }
     }
+  }
+
+  async navigateToRevalidacion(): Promise<void> {
+    await this.ensureMonitoreoExpanded();
+    if (await this.revalidacionLink.isVisible().catch(() => false)) {
+      await this.clickElement(this.revalidacionLink);
+      await this.page.waitForLoadState('networkidle');
+      return;
+    }
+    await this.goto('/revalidation_queues');
+    await this.waitHelpers.waitForPageLoad();
   }
 
   /**

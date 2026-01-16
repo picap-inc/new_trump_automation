@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 /**
@@ -13,6 +13,8 @@ export class PicashPage extends BasePage {
   private readonly dispositivosBloqueadosLink: Locator;
   private readonly errorCargaLink: Locator;
   private readonly ingresoPicashLink: Locator;
+  private readonly productoSelect: Locator;
+  private readonly paisSelect: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -22,6 +24,8 @@ export class PicashPage extends BasePage {
     this.dispositivosBloqueadosLink = page.getByRole('link', { name: /Dispositivos bloqueados/i });
     this.errorCargaLink = page.getByRole('link', { name: /Error de carga/i });
     this.ingresoPicashLink = page.getByRole('link', { name: /Ingreso de Picash/i });
+    this.productoSelect = page.getByRole('combobox', { name: /Producto/i });
+    this.paisSelect = page.getByRole('combobox', { name: /País/i });
   }
 
   private async navigateUsingLinkOrHref(link: Locator, fallbackPath: string): Promise<void> {
@@ -64,6 +68,14 @@ export class PicashPage extends BasePage {
 
   async navigateToIngresoPicash(): Promise<void> {
     await this.navigateUsingLinkOrHref(this.ingresoPicashLink, '/picash');
+  }
+
+  async applyDashboardFilters(producto: string, pais: string): Promise<void> {
+    await expect(this.productoSelect).toBeVisible();
+    await this.productoSelect.selectOption({ label: producto });
+
+    await expect(this.paisSelect).toBeVisible();
+    await this.paisSelect.selectOption({ label: pais });
   }
 }
 

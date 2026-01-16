@@ -8,6 +8,7 @@ import { testConfig } from '../config/test-config';
 export class TrumpPage extends BasePage {
   private readonly trumpModule: Locator;
   private readonly pilotSafeLink: Locator;
+  private readonly usuariosRolesLink: Locator;
   private readonly paisSelect: Locator;
   private readonly estadoSelect: Locator;
   private readonly tipoServicioSelect: Locator;
@@ -18,6 +19,7 @@ export class TrumpPage extends BasePage {
     super(page);
     this.trumpModule = this.sideNav.getByText('TRUMP', { exact: true });
     this.pilotSafeLink = this.sideNav.getByRole('link', { name: /Pilot Safe/i });
+    this.usuariosRolesLink = this.sideNav.getByRole('link', { name: /Usuarios\/Roles/i });
     this.paisSelect = page.locator('#country, #country_id').first();
     this.estadoSelect = page.locator('#state, #state_id').first();
     this.tipoServicioSelect = page.locator('#service_type, #service_type_id').first();
@@ -40,6 +42,10 @@ export class TrumpPage extends BasePage {
 
   async navigateToPilotSafe(): Promise<void> {
     await this.clickAndWaitForURL(this.pilotSafeLink, /\/pilot_safe/i);
+  }
+
+  async navigateToUsuariosRoles(): Promise<void> {
+    await this.clickAndWaitForURL(this.usuariosRolesLink, /\/usuarios-roles/);
   }
 
   async applyFilters(pais: string, estado: string, tipoServicio: string): Promise<void> {

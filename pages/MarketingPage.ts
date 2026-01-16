@@ -13,6 +13,8 @@ export class MarketingPage extends BasePage {
   private readonly toDateInput: Locator;
   private readonly campaignStatusSelect: Locator;
   private readonly searchButton: Locator;
+  private readonly dashboardDateInput: Locator;
+  private readonly dashboardCitySelect: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -23,6 +25,11 @@ export class MarketingPage extends BasePage {
     this.toDateInput = page.getByRole('textbox', { name: 'Hasta' });
     this.campaignStatusSelect = page.locator('#campaign_status');
     this.searchButton = page.getByRole('button', { name: 'Buscar' });
+    this.dashboardDateInput = page.getByRole('textbox', { name: /yyyy-MM-dd/i });
+    this.dashboardCitySelect = page
+      .getByRole('heading', { name: /Conductores en línea/i })
+      .locator('..')
+      .getByRole('combobox');
   }
 
   /**
@@ -96,6 +103,15 @@ export class MarketingPage extends BasePage {
   async verifyDashboardLoaded(): Promise<void> {
     const dashboardHeading = this.page.getByRole('heading', { name: 'Usuarios registrados' });
     await expect(dashboardHeading).toBeVisible({ timeout: testConfig.timeouts.medium });
+  }
+
+  /**
+   * Aplica filtro de ciudad en el dashboard (smoke)
+   */
+  async filterDashboardByCity(cityLabel: string): Promise<void> {
+    await expect(this.dashboardDateInput).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await expect(this.dashboardCitySelect).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await this.dashboardCitySelect.selectOption({ label: cityLabel });
   }
 }
 
