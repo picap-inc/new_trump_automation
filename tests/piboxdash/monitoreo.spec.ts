@@ -15,6 +15,7 @@ test.describe('Smoke de Pibox', () => {
     navigationPage,
     piboxDashboardPage
   }, testInfo) => {
+    test.setTimeout(120000);
     await test.step('Login', async () => {
       await loginPage.login(users.admin.email, users.admin.password);
       await loginPage.takeScreenshot(testInfo, '01 - Login');

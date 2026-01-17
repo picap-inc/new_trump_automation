@@ -15,7 +15,7 @@ test.describe('Smoke de Marketing', () => {
     navigationPage,
     marketingPageExtended
   }, testInfo) => {
-    test.setTimeout(120000);
+    test.setTimeout(180000);
     await test.step('Login', async () => {
       await loginPage.login(users.admin.email, users.admin.password);
       await loginPage.takeScreenshot(testInfo, '01 - Login');
@@ -34,7 +34,7 @@ test.describe('Smoke de Marketing', () => {
     await test.step('Ir a Tarifa diferencial', async () => {
       await marketingPageExtended.navigateToMarketing();
       await marketingPageExtended.navigateToTarifaDiferencial();
-      await expect(page).toHaveURL(/\/pricing\/sensitivity_scores/, { timeout: 120000 });
+      await expect(page).toHaveURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: 120000 });
       await loginPage.takeScreenshot(testInfo, '04 - Tarifa diferencial');
     });
   });

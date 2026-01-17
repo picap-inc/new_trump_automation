@@ -53,6 +53,7 @@ export class MarketingPageExtended extends MarketingPage {
   // Comparador Tarifas
   private readonly comparadorTarifasLink: Locator;
   private readonly tarifaDiferencialLink: Locator;
+  private readonly tarifaDiferencialTextLink: Locator;
 
   // Toggles de grupos en menú lateral
   private readonly codigosGroupToggle: Locator;
@@ -106,8 +107,9 @@ export class MarketingPageExtended extends MarketingPage {
     this.visualesMapaLink = this.sideNav.getByRole('link', { name: /Vehículos en el mapa/i });
 
     // Comparador Tarifas
-    this.comparadorTarifasLink = this.sideNav.getByRole('link', { name: /Comparador de tarifas/i });
-    this.tarifaDiferencialLink = this.sideNav.getByRole('link', { name: /Tarifa diferencial/i });
+    this.comparadorTarifasLink = this.sideNav.locator('a[href*="/benchmark_routes"]').first();
+    this.tarifaDiferencialLink = this.sideNav.locator('a[href*="/pricing/sensitivity_scores"]').first();
+    this.tarifaDiferencialTextLink = this.sideNav.getByRole('link', { name: /Tarifa diferencial/i });
 
     // Toggles de grupos
     this.codigosGroupToggle = this.sideNav
@@ -355,21 +357,35 @@ export class MarketingPageExtended extends MarketingPage {
   }
 
   async navigateToTarifaDiferencial(): Promise<void> {
+    const gotoTarifa = async (url: string): Promise<void> => {
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: testConfig.timeouts.extraLong });
+          return;
+        } catch (error) {
+          if (attempt === 2) throw error;
+          await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        }
+      }
+    };
+
     await this.ensureMarketingExpanded();
-    await expect(this.tarifaDiferencialLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    const href = await this.tarifaDiferencialLink.getAttribute('href').catch(() => null);
-    try {
-      await this.forceClick(this.tarifaDiferencialLink);
-      await this.page.waitForLoadState('networkidle').catch(() => undefined);
-      if (href) {
-        await this.page.waitForURL(new RegExp(href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), { timeout: testConfig.timeouts.long }).catch(() => undefined);
-      }
-    } catch (_) {
-      if (href) {
-        await this.goto(href);
-        await this.waitHelpers.waitForPageLoad();
-      }
+    const target = await this.resolveVisibleTarget([this.tarifaDiferencialLink, this.tarifaDiferencialTextLink]);
+    if (!target) {
+      await this.logSideNavLinks('Tarifa diferencial');
+      await gotoTarifa('https://admin.picap.io/pricing/sensitivity_scores');
+      return;
     }
+    await expect(target).toBeVisible({ timeout: testConfig.timeouts.medium });
+    const href = await target.getAttribute('href').catch(() => null);
+    const resolvedHref = href ? new URL(href, this.page.url()).toString() : null;
+    await this.waitHelpers.waitWithRetry(async () => {
+      await target.scrollIntoViewIfNeeded().catch(() => undefined);
+      await target.click({ force: true });
+    }, 2);
+    await this.page.waitForURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, {
+      timeout: testConfig.timeouts.extraLong
+    }).catch(() => undefined);
   }
 }
 

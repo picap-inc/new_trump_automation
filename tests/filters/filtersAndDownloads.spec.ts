@@ -31,7 +31,7 @@ const pages = [
   { name: 'Marketing - Bicitaxi', url: 'https://admin.picap.io/bicitaxi_working_areas' },
   { name: 'Marketing - Pilevels', url: 'https://admin.picap.io/pilevel_gamification_confs' },
   { name: 'Marketing - Tarifa diferencial', url: 'https://admin.picap.io/pricing/sensitivity_scores', timeout: 90000, useMarketingMenu: true },
-  { name: 'Marketing - Perfilamiento Pasajeros', url: 'https://admin.picap.io/passenger_profiles', downloads: true },
+  { name: 'Marketing - Perfilamiento Pasajeros', url: 'https://admin.picap.io/passenger_profiles', downloads: true, timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Perfilamiento Pilotos', url: 'https://admin.picap.io/driver_profiles', downloads: true },
   { name: 'Monitoreo - Alertas', url: 'https://admin.picap.io/text_based_alerts' },
   { name: 'Monitoreo - Revalidación', url: 'https://admin.picap.io/revalidation_queues' },

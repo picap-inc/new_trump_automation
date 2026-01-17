@@ -44,6 +44,7 @@ export class MarketingPage extends BasePage {
       return;
     }
 
+    await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
     if (!(await this.sideNav.isVisible().catch(() => false))) {
       const menuButton = this.page.locator('#ham-menu');
       if (await menuButton.isVisible().catch(() => false)) {
@@ -52,8 +53,11 @@ export class MarketingPage extends BasePage {
       }
     }
 
-    await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await this.forceClick(this.marketingModule);
+    await this.waitHelpers.waitWithRetry(async () => {
+      await this.marketingModule.scrollIntoViewIfNeeded().catch(() => undefined);
+      await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });
+      await this.forceClick(this.marketingModule);
+    }, 2);
     await this.waitHelpers.waitWithRetry(async () => {
       await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
     }, 3);

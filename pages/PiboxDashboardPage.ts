@@ -191,7 +191,7 @@ export class PiboxDashboardPage extends BasePage {
     const href = await this.monitoreoLink.getAttribute('href').catch(() => null);
     try {
       await this.forceClick(this.monitoreoLink);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
       await this.waitForHref(href);
       return;
     } catch (_) {

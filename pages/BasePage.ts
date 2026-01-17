@@ -28,6 +28,9 @@ export class BasePage {
         if (attempt === 3) {
           throw error;
         }
+        if (this.page.isClosed()) {
+          throw error;
+        }
         await this.page.waitForTimeout(1000 * attempt);
       }
     }
