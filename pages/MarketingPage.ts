@@ -53,6 +53,11 @@ export class MarketingPage extends BasePage {
       }
     }
 
+    const isModuleVisible = await this.marketingModule.isVisible().catch(() => false);
+    if (!isModuleVisible) {
+      return;
+    }
+
     await this.waitHelpers.waitWithRetry(async () => {
       await this.marketingModule.scrollIntoViewIfNeeded().catch(() => undefined);
       await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });

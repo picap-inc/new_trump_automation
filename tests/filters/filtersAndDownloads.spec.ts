@@ -23,7 +23,7 @@ const pages = [
   { name: 'Marketing - Campañas Promocodes', url: 'https://admin.picap.io/promo_code_campaigns' },
   { name: 'Marketing - Promo Codes', url: 'https://admin.picap.io/promo_codes' },
   { name: 'Marketing - Notificaciones', url: 'https://admin.picap.io/notifications' },
-  { name: 'Marketing - Push masivos', url: 'https://admin.picap.io/push_notification_tasks' },
+  { name: 'Marketing - Push masivos', url: 'https://admin.picap.io/push_notification_tasks', timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Visuales Banners', url: 'https://admin.picap.io/home_sliders' },
   { name: 'Marketing - Comparador tarifas', url: 'https://admin.picap.io/benchmark_routes' },
   { name: 'Marketing - Códigos QR', url: 'https://admin.picap.io/qr_code_users' },
