@@ -45,7 +45,7 @@ export class WaitHelpers {
           throw lastError;
         }
         if (attempt < maxAttempts) {
-          await this.page.waitForTimeout(1000 * attempt);
+          await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         }
       }
     }
@@ -72,7 +72,7 @@ export class WaitHelpers {
    * Preferir esperas dinámicas cuando sea posible
    */
   async wait(ms: number): Promise<void> {
-    await this.page.waitForTimeout(ms);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
   }
 }
 

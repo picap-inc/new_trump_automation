@@ -6,10 +6,10 @@ import { testConfig } from '../config/test-config';
  * NavigationPage - Manejo de navegación principal y menú lateral
  */
 export class NavigationPage extends BasePage {
-  private readonly menuButton: Locator;
-  private readonly menuContent: Locator;
-  private readonly profileButton: Locator;
-  private readonly logoutLink: Locator;
+  private menuButton: Locator;
+  private menuContent: Locator;
+  private profileButton: Locator;
+  private logoutLink: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -17,6 +17,13 @@ export class NavigationPage extends BasePage {
     this.menuContent = page.locator('#mySidenav');
     this.profileButton = page.getByRole('button', { name: 'Abrir menú de usuario' });
     this.logoutLink = page.getByRole('link', { name: 'Cerrar sesión' });
+  }
+
+  private refreshLocators(): void {
+    this.menuButton = this.page.locator('#ham-menu');
+    this.menuContent = this.page.locator('#mySidenav');
+    this.profileButton = this.page.getByRole('button', { name: 'Abrir menú de usuario' });
+    this.logoutLink = this.page.getByRole('link', { name: 'Cerrar sesión' });
   }
 
   /**
@@ -29,6 +36,7 @@ export class NavigationPage extends BasePage {
    */
   async openSideMenu(): Promise<void> {
     console.log('🔍 Esperando que el botón del menú esté disponible...');
+    await this.ensurePageAlive();
 
     const hasVisibleLinks = await this.sideNav.getByRole('link').first().isVisible().catch(() => false);
     if (hasVisibleLinks) {
@@ -58,29 +66,13 @@ export class NavigationPage extends BasePage {
 
     console.log('🖱️ Haciendo clic en el botón del menú...');
     
-    // Intentar click con retry y force si es necesario
-    let clickSuccess = false;
-    for (let i = 0; i < 3; i++) {
-      try {
-        if (i === 0) {
-          // Primer intento: click normal
-          await this.menuButton.click({ timeout: 5000 });
-        } else {
-          // Reintentos: force click (data-action puede bloquear)
-          await this.menuButton.click({ force: true, timeout: 5000 });
-        }
-        clickSuccess = true;
-        break;
-      } catch (error) {
-        console.warn(`Click intento ${i + 1} falló, reintentando...`);
-        if (i < 2) {
-          await expect(this.menuButton).toBeVisible({ timeout: testConfig.timeouts.short });
-        }
-      }
-    }
-
-    if (!clickSuccess) {
-      throw new Error('❌ No se pudo hacer click en el menú después de 3 intentos');
+    try {
+      await this.menuButton.click({ timeout: 5000 });
+    } catch (error) {
+      await this.recreatePage();
+      this.refreshLocators();
+      await this.menuButton.waitFor({ state: 'visible', timeout: testConfig.timeouts.long });
+      await this.menuButton.click({ force: true, timeout: 5000 });
     }
 
     // Verificar que el menú esté visible (reintento si fue un toggle fallido)

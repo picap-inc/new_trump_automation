@@ -18,33 +18,37 @@ export class BasePage {
     this.sideNav = page.locator('#mySidenav');
   }
 
+  protected async recreatePage(): Promise<void> {
+    const context = this.page.context();
+    const storageState = fs.existsSync('.auth/user.json') ? '.auth/user.json' : undefined;
+
+    if (context && typeof (context as any).isClosed === 'function' && !(context as any).isClosed()) {
+      const newPage = await context.newPage();
+      this.page = newPage;
+      this.waitHelpers = new WaitHelpers(this.page);
+      this.sideNav = this.page.locator('#mySidenav');
+      return;
+    }
+
+    if (context?.browser?.()) {
+      const newContext = await context.browser()!.newContext(storageState ? { storageState } : undefined);
+      const newPage = await newContext.newPage();
+      this.page = newPage;
+      this.waitHelpers = new WaitHelpers(this.page);
+      this.sideNav = this.page.locator('#mySidenav');
+      return;
+    }
+
+    throw new Error('No se pudo recrear el contexto/página.');
+  }
+
   /**
    * Garantiza que la página esté viva.
    * Si se cerró, crea una nueva página (y contexto si es necesario).
    */
   protected async ensurePageAlive(): Promise<void> {
     if (!this.page.isClosed()) return;
-
-    const context = this.page.context();
-    let newPage: Page | null = null;
-
-    try {
-      if (context && typeof (context as any).isClosed === 'function' && !(context as any).isClosed()) {
-        newPage = await context.newPage();
-      } else if (context?.browser?.()) {
-        const storageState = fs.existsSync('.auth/user.json') ? '.auth/user.json' : undefined;
-        const newContext = await context.browser()!.newContext(storageState ? { storageState } : undefined);
-        newPage = await newContext.newPage();
-      }
-    } catch (_) {
-      // Si no se puede crear página, se intentará nuevamente en la llamada siguiente
-    }
-
-    if (newPage) {
-      this.page = newPage;
-      this.waitHelpers = new WaitHelpers(this.page);
-      this.sideNav = this.page.locator('#mySidenav');
-    }
+    await this.recreatePage();
   }
 
   /**
@@ -89,7 +93,12 @@ export class BasePage {
     } = options;
 
     await this.ensurePageAlive();
-    await this.page.goto(url, { waitUntil, timeout });
+    try {
+      await this.page.goto(url, { waitUntil, timeout });
+    } catch (error) {
+      await this.recreatePage();
+      await this.page.goto(url, { waitUntil, timeout });
+    }
     if (waitForUrl) {
       await this.page.waitForURL(waitForUrl, { timeout });
     }
@@ -120,7 +129,9 @@ export class BasePage {
       if (String(error).includes('intercepts pointer events')) {
         await this.waitForLoadingOverlay();
         await locator.click({ force: true });
+        return;
       }
+      throw error;
     }
   }
 
@@ -155,6 +166,19 @@ export class BasePage {
   ): Promise<void> {
     await this.ensurePageAlive();
     await this.waitHelpers.waitForElement(locator);
+    const target = await locator.getAttribute('target').catch(() => null);
+    if (target === '_blank') {
+      const newPagePromise = this.page.context().waitForEvent('page');
+      await locator.click();
+      const newPage = await newPagePromise;
+      this.page = newPage;
+      this.waitHelpers = new WaitHelpers(this.page);
+      this.sideNav = this.page.locator('#mySidenav');
+      await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+      await this.page.waitForURL(url, { timeout }).catch(() => undefined);
+      return;
+    }
     try {
       await Promise.all([
         this.page.waitForURL(url, { timeout }),
@@ -171,7 +195,7 @@ export class BasePage {
         await this.safeGotoUrl(resolved, { waitForUrl: url });
         return;
       }
-      return;
+      throw error;
     }
     await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
   }

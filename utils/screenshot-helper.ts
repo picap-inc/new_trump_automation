@@ -71,7 +71,7 @@ export class ScreenshotHelper {
       } catch (error) {
         lastError = error as Error;
         if (attempt < maxAttempts) {
-          await page.waitForTimeout(1000);
+          await page.waitForLoadState('domcontentloaded').catch(() => undefined);
         }
       }
     }

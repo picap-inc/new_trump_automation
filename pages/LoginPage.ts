@@ -39,7 +39,12 @@ export class LoginPage extends BasePage {
       return;
     }
 
-    await this.safeGoto('/sessions/new', { waitForUrl: /\/sessions\/new/ });
+    try {
+      await this.safeGoto('/sessions/new', { waitForUrl: /\/sessions\/new/ });
+    } catch (error) {
+      await this.recreatePage();
+      await this.safeGoto('/sessions/new', { waitForUrl: /\/sessions\/new/ });
+    }
     await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.long });
     await this.fillInput(this.emailInput, email);
     await this.fillInput(this.passwordInput, password);
