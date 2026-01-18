@@ -69,7 +69,8 @@ export class LoginPage extends BasePage {
         if (stillLoggedIn) {
           return;
         }
-        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.short });
+        await this.page.goto('https://admin.picap.io/sessions/new', { waitUntil: 'domcontentloaded' }).catch(() => {});
+        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium });
       }
     }
   }
