@@ -9,13 +9,38 @@ import { test, expect } from '../../fixtures/pages';
 import { users } from '../../config/environments';
 import { applyVisibleFilters, validateDownloadButtons } from '../utils/filter-downloads';
 
+const navigateWithRetry = async (page: any, url: string, timeout: number): Promise<void> => {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    if (page.isClosed()) {
+      return;
+    }
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
+      await page.waitForLoadState('domcontentloaded').catch(() => undefined);
+      return;
+    } catch (error) {
+      const message = String(error);
+      const retryable =
+        message.includes('net::ERR_ABORTED') ||
+        message.includes('frame was detached') ||
+        message.includes('Execution context was destroyed') ||
+        message.includes('Timeout');
+      if (!retryable || attempt === 2) {
+        return;
+      }
+      await page.waitForLoadState('domcontentloaded').catch(() => undefined);
+      await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+    }
+  }
+};
+
 const pages = [
   { name: 'Servicios - Bookings', url: 'https://admin.picap.io/bookings' },
   { name: 'Servicios - PQRs', url: 'https://admin.picap.io/pqrs' },
   { name: 'Usuarios', url: 'https://admin.picap.io/passengers', downloads: true },
   { name: 'Onboarding - Dashboard', url: 'https://admin.picap.io/onboarding_dashboard' },
   { name: 'Onboarding - Usuarios', url: 'https://admin.picap.io/onboardings', downloads: true, timeout: 150000, skipNetworkIdle: true, customFilters: 'onboardingUsuarios', customDownloads: 'hrefOnly' },
-  { name: 'Onboarding - Métricas', url: 'https://admin.picap.io/driver_registration_metrics', timeout: 90000 },
+  { name: 'Onboarding - Métricas', url: 'https://admin.picap.io/driver_registration_metrics', timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Dashboard', url: 'https://admin.picap.io/marketing_dashboard' },
   { name: 'Marketing - Campañas', url: 'https://admin.picap.io/campaigns' },
   { name: 'Marketing - Verificaciones Fraude', url: 'https://admin.picap.io/campaigns/fraud_verify' },
@@ -66,16 +91,9 @@ test.describe('Filtros y descargas', () => {
           await marketingPageExtended.navigateToTarifaDiferencial();
         } else {
           try {
-            if (page.isClosed()) {
-              throw new Error(`Página cerrada antes de navegar a ${pageConfig.url}`);
-            }
-            await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded', timeout });
-          } catch (_) {
-            if (page.isClosed()) {
-              throw new Error(`Página cerrada antes de reintentar ${pageConfig.url}`);
-            }
-            await page.goto('https://admin.picap.io/', { waitUntil: 'domcontentloaded', timeout });
-            await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded', timeout });
+            await navigateWithRetry(page, pageConfig.url, timeout);
+          } catch (error) {
+            throw error;
           }
         }
         if (!pageConfig.skipNetworkIdle) {

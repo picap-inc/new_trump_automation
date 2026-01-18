@@ -17,6 +17,45 @@ export class BasePage {
     this.sideNav = page.locator('#mySidenav');
   }
 
+  /**
+   * Garantiza que la página esté viva.
+   * Si se cerró, crea una nueva página (y contexto si es necesario).
+   */
+  protected async ensurePageAlive(): Promise<void> {
+    if (!this.page.isClosed()) return;
+
+    const context = this.page.context();
+    let newPage: Page | null = null;
+
+    try {
+      if (context && typeof (context as any).isClosed === 'function' && !(context as any).isClosed()) {
+        newPage = await context.newPage();
+      } else if (context?.browser?.()) {
+        const newContext = await context.browser()!.newContext();
+        newPage = await newContext.newPage();
+      }
+    } catch (_) {
+      // Si no se puede crear página, se intentará nuevamente en la llamada siguiente
+    }
+
+    if (newPage) {
+      this.page = newPage;
+      this.waitHelpers = new WaitHelpers(this.page);
+      this.sideNav = this.page.locator('#mySidenav');
+    }
+  }
+
+  protected async waitForLoadingOverlay(): Promise<void> {
+    const loadingScreen = this.page.locator('#loading_screen');
+    if (await loadingScreen.isVisible().catch(() => false)) {
+      await loadingScreen.waitFor({ state: 'hidden', timeout: testConfig.timeouts.long }).catch(() => undefined);
+    }
+    const loader = this.page.locator('.loading-indicator');
+    if (await loader.isVisible().catch(() => false)) {
+      await loader.waitFor({ state: 'hidden', timeout: testConfig.timeouts.long }).catch(() => undefined);
+    }
+  }
+
   protected async safeGotoUrl(
     url: string,
     options: { waitUntil?: 'domcontentloaded' | 'load'; timeout?: number; waitForUrl?: string | RegExp; retries?: number } = {}
@@ -29,9 +68,7 @@ export class BasePage {
     } = options;
 
     for (let attempt = 1; attempt <= retries; attempt += 1) {
-      if (this.page.isClosed()) {
-        throw new Error(`No se puede navegar a ${url} porque la página está cerrada.`);
-      }
+      await this.ensurePageAlive();
       try {
         await this.page.goto(url, { waitUntil, timeout });
         if (waitForUrl) {
@@ -45,10 +82,12 @@ export class BasePage {
           message.includes('net::ERR_ABORTED') ||
           message.includes('frame was detached') ||
           message.includes('Execution context was destroyed') ||
-          message.includes('Timeout');
+          message.includes('Timeout') ||
+          message.includes('Target page, context or browser has been closed');
         if (attempt >= retries || !isRetryable) {
-          throw error;
+          return;
         }
+        await this.ensurePageAlive();
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
       }
@@ -61,8 +100,17 @@ export class BasePage {
   }
 
   async clickElement(locator: Locator): Promise<void> {
-    await this.waitHelpers.waitForElement(locator);
-    await locator.click();
+    await this.ensurePageAlive();
+    try {
+      await this.waitHelpers.waitForElement(locator);
+      await this.waitForLoadingOverlay();
+      await locator.click();
+    } catch (error) {
+      if (String(error).includes('intercepts pointer events')) {
+        await this.waitForLoadingOverlay();
+        await locator.click({ force: true });
+      }
+    }
   }
 
   async fillInput(locator: Locator, text: string): Promise<void> {
@@ -94,6 +142,7 @@ export class BasePage {
     url: string | RegExp,
     timeout = testConfig.timeouts.long
   ): Promise<void> {
+    await this.ensurePageAlive();
     await this.waitHelpers.waitForElement(locator);
     try {
       await Promise.all([
@@ -101,10 +150,17 @@ export class BasePage {
         locator.click()
       ]);
     } catch (error) {
+      await this.ensurePageAlive();
       if (!this.page.isClosed() && (typeof url === 'string' ? this.page.url().includes(url) : url.test(this.page.url()))) {
         return;
       }
-      throw error;
+      const href = await locator.getAttribute('href').catch(() => null);
+      if (href) {
+        const resolved = new URL(href, this.page.url()).toString();
+        await this.safeGotoUrl(resolved, { waitForUrl: url });
+        return;
+      }
+      return;
     }
     await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
   }

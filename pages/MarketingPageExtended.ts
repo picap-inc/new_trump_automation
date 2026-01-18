@@ -357,6 +357,7 @@ export class MarketingPageExtended extends MarketingPage {
   }
 
   async navigateToTarifaDiferencial(): Promise<void> {
+    await this.ensurePageAlive();
     await this.ensureMarketingExpanded();
     const target = await this.resolveVisibleTarget([this.tarifaDiferencialLink, this.tarifaDiferencialTextLink]);
     if (!target) {

@@ -66,6 +66,7 @@ export class OnboardingPage extends BasePage {
   }
 
   async navigateToMetricasRegistro(): Promise<void> {
+    await this.ensurePageAlive();
     try {
       await this.clickAndWaitForURL(
         this.metricasRegistroLink,
@@ -122,9 +123,11 @@ export class OnboardingPage extends BasePage {
   }
 
   async exportList(): Promise<void> {
+    await this.ensurePageAlive();
     const exportButton = this.page.getByRole('link', { name: 'Exportar listado' });
     await expect(exportButton).toBeVisible();
     await this.clickElement(exportButton);
+    await this.page.waitForEvent('download', { timeout: testConfig.timeouts.long }).catch(() => undefined);
   }
 }
 
