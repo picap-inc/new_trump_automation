@@ -45,6 +45,14 @@ export class BasePage {
     }
   }
 
+  /**
+   * Expone una página viva para uso en specs.
+   */
+  async getLivePage(): Promise<Page> {
+    await this.ensurePageAlive();
+    return this.page;
+  }
+
   protected async waitForLoadingOverlay(): Promise<void> {
     const loadingScreen = this.page.locator('#loading_screen');
     if (await loadingScreen.isVisible().catch(() => false)) {

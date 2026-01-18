@@ -75,11 +75,13 @@ const pages = [
 
 test.describe('Filtros y descargas', () => {
   for (const pageConfig of pages) {
-    test(`${pageConfig.name} - filtros`, async ({ page, loginPage, navigationPage, marketingPageExtended }, testInfo) => {
+    test(`${pageConfig.name} - filtros`, async ({ loginPage, navigationPage, marketingPageExtended }, testInfo) => {
       test.setTimeout(pageConfig.timeout ?? 60000);
+      const getActivePage = async () => loginPage.getLivePage();
 
       await test.step('Login', async () => {
         await loginPage.login(users.admin.email, users.admin.password);
+        await getActivePage();
         await loginPage.takeScreenshot(testInfo, '01 - Login');
       });
 
@@ -91,44 +93,48 @@ test.describe('Filtros y descargas', () => {
           await marketingPageExtended.navigateToTarifaDiferencial();
         } else {
           try {
-            await navigateWithRetry(page, pageConfig.url, timeout);
+            const activePage = await getActivePage();
+            await navigateWithRetry(activePage, pageConfig.url, timeout);
           } catch (error) {
             throw error;
           }
         }
         if (!pageConfig.skipNetworkIdle) {
-          await page.waitForLoadState('networkidle').catch(() => undefined);
+          const activePage = await getActivePage();
+          await activePage.waitForLoadState('networkidle').catch(() => undefined);
         }
         await loginPage.takeScreenshot(testInfo, '02 - Vista');
       });
 
       await test.step('Aplicar filtros visibles', async () => {
+        const activePage = await getActivePage();
         if (pageConfig.customFilters === 'piboxOperationRequest') {
-          const companyInput = page.locator('#company_name');
+          const companyInput = activePage.locator('#company_name');
           if (await companyInput.isVisible().catch(() => false)) {
             await companyInput.fill('test');
           }
         } else if (pageConfig.customFilters === 'onboardingUsuarios') {
-          const emailInput = page.locator('#email');
+          const emailInput = activePage.locator('#email');
           if (await emailInput.isVisible().catch(() => false)) {
             await emailInput.fill('test@example.com');
           }
         } else if (pageConfig.customFilters === 'piboxOverview') {
-          const companyInput = page.locator('#company_ids');
+          const companyInput = activePage.locator('#company_ids');
           if (await companyInput.isVisible().catch(() => false)) {
             await companyInput.fill('test');
           }
         } else {
-          await applyVisibleFilters(page);
+          await applyVisibleFilters(activePage);
         }
-        await page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        await activePage.waitForLoadState('domcontentloaded').catch(() => undefined);
         await loginPage.takeScreenshot(testInfo, '03 - Filtros aplicados');
       });
 
       if (pageConfig.downloads) {
         await test.step('Validar descargas', async () => {
+          const activePage = await getActivePage();
           if (pageConfig.customDownloads === 'hrefOnly') {
-            const downloadButtons = page.locator('button, a').filter({ hasText: /(descargar|exportar|reporte|informe|excel|csv|xls|pdf|download)/i });
+            const downloadButtons = activePage.locator('button, a').filter({ hasText: /(descargar|exportar|reporte|informe|excel|csv|xls|pdf|download)/i });
             let count = 0;
             try {
               count = await downloadButtons.count();
@@ -145,7 +151,7 @@ test.describe('Filtros y descargas', () => {
               await expect(downloadButtons.nth(1)).toBeVisible();
             }
           } else {
-            await validateDownloadButtons(page);
+            await validateDownloadButtons(activePage);
           }
           await loginPage.takeScreenshot(testInfo, '04 - Descargas');
         });
