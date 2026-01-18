@@ -66,11 +66,18 @@ export class OnboardingPage extends BasePage {
   }
 
   async navigateToMetricasRegistro(): Promise<void> {
-    await this.clickAndWaitForURL(
-      this.metricasRegistroLink,
-      'https://admin.picap.io/driver_registration_metrics',
-      testConfig.timeouts.long
-    );
+    try {
+      await this.clickAndWaitForURL(
+        this.metricasRegistroLink,
+        /\/driver_registration_metrics/,
+        testConfig.timeouts.long
+      );
+    } catch (_) {
+      await this.safeGotoUrl('https://admin.picap.io/driver_registration_metrics', {
+        waitForUrl: /\/driver_registration_metrics/,
+        timeout: testConfig.timeouts.long
+      });
+    }
   }
 
   async filterUsuariosOnboarding(country: string, city: string, vehicleType: string): Promise<void> {

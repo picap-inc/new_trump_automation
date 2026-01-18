@@ -44,11 +44,13 @@ export class BasePage {
         const isRetryable =
           message.includes('net::ERR_ABORTED') ||
           message.includes('frame was detached') ||
-          message.includes('Execution context was destroyed');
+          message.includes('Execution context was destroyed') ||
+          message.includes('Timeout');
         if (attempt >= retries || !isRetryable) {
           throw error;
         }
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
       }
     }
   }

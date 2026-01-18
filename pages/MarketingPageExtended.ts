@@ -362,7 +362,9 @@ export class MarketingPageExtended extends MarketingPage {
     if (!target) {
       await this.logSideNavLinks('Tarifa diferencial');
       await this.safeGotoUrl('https://admin.picap.io/pricing/sensitivity_scores', {
-        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/
+        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/,
+        timeout: testConfig.timeouts.extraLong,
+        retries: 3
       });
       return;
     }

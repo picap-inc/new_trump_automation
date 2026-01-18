@@ -114,7 +114,7 @@ export const applyVisibleFilters = async (page: Page): Promise<void> => {
         throw error;
       }
     }
-    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForLoadState('domcontentloaded').catch(() => undefined);
   }
 
   // No ejecutamos "Limpiar" para evitar overlays que bloquean el click

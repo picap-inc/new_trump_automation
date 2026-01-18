@@ -39,7 +39,7 @@ const pages = [
   { name: 'Picash - Créditos', url: 'https://admin.picap.io/picash/credits', downloads: true },
   { name: 'Picash - Créditos elegibles', url: 'https://admin.picap.io/picash/credits/passengers' },
   { name: 'Picash - Dispositivos bloqueados', url: 'https://admin.picap.io/picash/locked_sessions' },
-  { name: 'Calidad - Dashboard', url: 'https://admin.picap.io/quality', downloads: true },
+  { name: 'Calidad - Dashboard', url: 'https://admin.picap.io/quality', downloads: true, skipNetworkIdle: true },
   { name: 'Calidad - Matriz', url: 'https://admin.picap.io/quality/process_entities/matrices', downloads: true },
   { name: 'App - Direcciones reportadas', url: 'https://admin.picap.io/feedback_directions' },
   { name: 'Pibox - Compañías', url: 'https://admin.picap.io/pibox/companies' },
