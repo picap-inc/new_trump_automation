@@ -7,6 +7,7 @@
 
 import { test, expect } from '../../fixtures/pages';
 import { users } from '../../config/environments';
+import { ScreenshotHelper } from '../../utils/screenshot-helper';
 
 test.describe('Smoke de Marketing', () => {
   test('Acceder a Tarifa diferencial', async ({
@@ -28,10 +29,9 @@ test.describe('Smoke de Marketing', () => {
 
     await test.step('Ir a Tarifa diferencial', async () => {
       await marketingPageExtended.navigateToMarketing();
-      await marketingPageExtended.navigateToTarifaDiferencial();
-      const activePage = await marketingPageExtended.getLivePage();
-      await expect(activePage).toHaveURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: 120000 });
-      await loginPage.takeScreenshot(testInfo, '04 - Tarifa diferencial');
+      const targetPage = await marketingPageExtended.navigateToTarifaDiferencial();
+      await expect(targetPage).toHaveURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: 120000 });
+      await ScreenshotHelper.attach(targetPage, testInfo, '04 - Tarifa diferencial');
     });
   });
 });

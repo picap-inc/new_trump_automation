@@ -356,29 +356,38 @@ export class MarketingPageExtended extends MarketingPage {
     await this.clickElement(this.comparadorTarifasLink);
   }
 
-  async navigateToTarifaDiferencial(): Promise<void> {
+  async navigateToTarifaDiferencial(): Promise<Page> {
     await this.ensurePageAlive();
     await this.ensureMarketingExpanded();
     const target = await this.resolveVisibleTarget([this.tarifaDiferencialLink, this.tarifaDiferencialTextLink]);
     if (!target) {
       await this.logSideNavLinks('Tarifa diferencial');
-      await this.safeGotoUrl('https://admin.picap.io/pricing/sensitivity_scores', {
-        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/,
-        timeout: testConfig.timeouts.extraLong,
-        retries: 3
+      await this.safeGoto('https://admin.picap.io/pricing/sensitivity_scores', {
+        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/
       });
-      return;
+      return this.getLivePage();
     }
     await expect(target).toBeVisible({ timeout: testConfig.timeouts.medium });
-    const href = await target.getAttribute('href').catch(() => null);
-    const resolvedHref = href ? new URL(href, this.page.url()).toString() : null;
-    await this.waitHelpers.waitWithRetry(async () => {
-      await target.scrollIntoViewIfNeeded().catch(() => undefined);
-      await target.click({ force: true });
-    }, 2);
-    await this.page.waitForURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, {
-      timeout: testConfig.timeouts.extraLong
-    }).catch(() => undefined);
+    const context = this.page.context();
+    const popupPromise = context.waitForEvent('page').catch(() => null);
+    const navigationPromise = this.page
+      .waitForURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: testConfig.timeouts.long })
+      .catch(() => null);
+
+    await target.scrollIntoViewIfNeeded().catch(() => undefined);
+    await target.click({ force: true });
+
+    const popup = await popupPromise;
+    if (popup) {
+      await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
+      await popup.waitForLoadState('networkidle').catch(() => undefined);
+      return popup;
+    }
+
+    await navigationPromise;
+    const livePage = await this.getLivePage();
+    await livePage.waitForLoadState('domcontentloaded').catch(() => undefined);
+    return livePage;
   }
 }
 

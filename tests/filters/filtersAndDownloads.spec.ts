@@ -9,31 +9,6 @@ import { test, expect } from '../../fixtures/pages';
 import { users } from '../../config/environments';
 import { applyVisibleFilters, validateDownloadButtons } from '../utils/filter-downloads';
 
-const navigateWithRetry = async (page: any, url: string, timeout: number): Promise<void> => {
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    if (page.isClosed()) {
-      return;
-    }
-    try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
-      await page.waitForLoadState('domcontentloaded').catch(() => undefined);
-      return;
-    } catch (error) {
-      const message = String(error);
-      const retryable =
-        message.includes('net::ERR_ABORTED') ||
-        message.includes('frame was detached') ||
-        message.includes('Execution context was destroyed') ||
-        message.includes('Timeout');
-      if (!retryable || attempt === 2) {
-        return;
-      }
-      await page.waitForLoadState('domcontentloaded').catch(() => undefined);
-      await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
-    }
-  }
-};
-
 const pages = [
   { name: 'Servicios - Bookings', url: 'https://admin.picap.io/bookings' },
   { name: 'Servicios - PQRs', url: 'https://admin.picap.io/pqrs' },
@@ -92,12 +67,8 @@ test.describe('Filtros y descargas', () => {
           await marketingPageExtended.navigateToMarketing();
           await marketingPageExtended.navigateToTarifaDiferencial();
         } else {
-          try {
-            const activePage = await getActivePage();
-            await navigateWithRetry(activePage, pageConfig.url, timeout);
-          } catch (error) {
-            throw error;
-          }
+          const activePage = await getActivePage();
+          await loginPage.safeGoto(pageConfig.url, { waitForUrl: new RegExp(pageConfig.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), timeout });
         }
         if (!pageConfig.skipNetworkIdle) {
           const activePage = await getActivePage();

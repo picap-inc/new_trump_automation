@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import fs from 'fs';
 import { WaitHelpers } from '../utils/wait-helpers';
 import { ScreenshotHelper } from '../utils/screenshot-helper';
 import { currentEnv } from '../config/environments';
@@ -31,7 +32,8 @@ export class BasePage {
       if (context && typeof (context as any).isClosed === 'function' && !(context as any).isClosed()) {
         newPage = await context.newPage();
       } else if (context?.browser?.()) {
-        const newContext = await context.browser()!.newContext();
+        const storageState = fs.existsSync('.auth/user.json') ? '.auth/user.json' : undefined;
+        const newContext = await context.browser()!.newContext(storageState ? { storageState } : undefined);
         newPage = await newContext.newPage();
       }
     } catch (_) {
@@ -46,9 +48,21 @@ export class BasePage {
   }
 
   /**
-   * Expone una página viva para uso en specs.
+   * Retorna la última página viva del contexto.
    */
   async getLivePage(): Promise<Page> {
+    const context = this.page.context();
+    const openPages = context.pages().filter((p) => !p.isClosed());
+    if (openPages.length > 0) {
+      const latest = openPages[openPages.length - 1];
+      if (latest !== this.page) {
+        this.page = latest;
+        this.waitHelpers = new WaitHelpers(this.page);
+        this.sideNav = this.page.locator('#mySidenav');
+      }
+      return this.page;
+    }
+
     await this.ensurePageAlive();
     return this.page;
   }
@@ -72,7 +86,7 @@ export class BasePage {
       waitUntil = 'domcontentloaded',
       timeout = testConfig.timeouts.long,
       waitForUrl,
-      retries = 2
+      retries = 1
     } = options;
 
     for (let attempt = 1; attempt <= retries; attempt += 1) {
@@ -105,6 +119,14 @@ export class BasePage {
   async goto(path: string = ''): Promise<void> {
     const url = `${currentEnv.baseURL}${path}`;
     await this.safeGotoUrl(url);
+  }
+
+  async safeGoto(urlOrPath: string, options: { waitForUrl?: string | RegExp; timeout?: number } = {}): Promise<void> {
+    const target = urlOrPath.startsWith('http') ? urlOrPath : `${currentEnv.baseURL}${urlOrPath}`;
+    await this.safeGotoUrl(target, {
+      waitForUrl: options.waitForUrl,
+      timeout: options.timeout
+    });
   }
 
   async clickElement(locator: Locator): Promise<void> {
