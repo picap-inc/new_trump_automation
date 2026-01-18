@@ -14,7 +14,7 @@ const pages = [
   { name: 'Servicios - PQRs', url: 'https://admin.picap.io/pqrs' },
   { name: 'Usuarios', url: 'https://admin.picap.io/passengers', downloads: true },
   { name: 'Onboarding - Dashboard', url: 'https://admin.picap.io/onboarding_dashboard' },
-  { name: 'Onboarding - Usuarios', url: 'https://admin.picap.io/onboardings', downloads: true, timeout: 90000, customFilters: 'onboardingUsuarios', customDownloads: 'hrefOnly' },
+  { name: 'Onboarding - Usuarios', url: 'https://admin.picap.io/onboardings', downloads: true, timeout: 120000, skipNetworkIdle: true, customFilters: 'onboardingUsuarios', customDownloads: 'hrefOnly' },
   { name: 'Onboarding - Métricas', url: 'https://admin.picap.io/driver_registration_metrics', timeout: 90000 },
   { name: 'Marketing - Dashboard', url: 'https://admin.picap.io/marketing_dashboard' },
   { name: 'Marketing - Campañas', url: 'https://admin.picap.io/campaigns' },

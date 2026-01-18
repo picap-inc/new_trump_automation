@@ -53,19 +53,18 @@ export class MarketingPage extends BasePage {
       }
     }
 
-    const isModuleVisible = await this.marketingModule.isVisible().catch(() => false);
-    if (!isModuleVisible) {
-      return;
+    if (await this.marketingModule.isVisible().catch(() => false)) {
+      await this.waitHelpers.waitWithRetry(async () => {
+        if (!(await this.marketingModule.isVisible().catch(() => false))) {
+          return;
+        }
+        await this.marketingModule.scrollIntoViewIfNeeded().catch(() => undefined);
+        await this.forceClick(this.marketingModule);
+      }, 2);
+      await this.waitHelpers.waitWithRetry(async () => {
+        await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+      }, 3);
     }
-
-    await this.waitHelpers.waitWithRetry(async () => {
-      await this.marketingModule.scrollIntoViewIfNeeded().catch(() => undefined);
-      await expect(this.marketingModule).toBeVisible({ timeout: testConfig.timeouts.medium });
-      await this.forceClick(this.marketingModule);
-    }, 2);
-    await this.waitHelpers.waitWithRetry(async () => {
-      await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-    }, 3);
   }
 
   /**

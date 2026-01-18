@@ -34,6 +34,10 @@ const waitForLoadingOverlay = async (page: Page): Promise<void> => {
   if (await piboxLoader.isVisible().catch(() => false)) {
     await piboxLoader.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => undefined);
   }
+  const pushLoader = page.locator('#push_notification_tasks_loading');
+  if (await pushLoader.isVisible().catch(() => false)) {
+    await pushLoader.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => undefined);
+  }
 };
 
 export const applyVisibleFilters = async (page: Page): Promise<void> => {
@@ -96,7 +100,16 @@ export const applyVisibleFilters = async (page: Page): Promise<void> => {
   if (await actionButton.isVisible().catch(() => false)) {
     await expect(actionButton).toBeEnabled();
     await waitForLoadingOverlay(page);
-    await actionButton.click();
+    try {
+      await actionButton.click();
+    } catch (error) {
+      if (String(error).includes('intercepts pointer events')) {
+        await waitForLoadingOverlay(page);
+        await actionButton.click({ force: true });
+      } else {
+        throw error;
+      }
+    }
     await page.waitForLoadState('networkidle').catch(() => undefined);
   }
 

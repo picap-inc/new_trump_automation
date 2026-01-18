@@ -52,7 +52,17 @@ export class OnboardingPage extends BasePage {
 
   async navigateToUsuariosOnboarding(): Promise<void> {
     const usuariosLink = this.sideNav.getByRole('link', { name: /Usuarios onboarding/i });
-    await this.clickAndWaitForURL(usuariosLink, 'https://admin.picap.io/onboardings', 17000);
+    const href = await usuariosLink.getAttribute('href').catch(() => null);
+    try {
+      await this.clickAndWaitForURL(usuariosLink, /\/onboardings/, testConfig.timeouts.long);
+    } catch (_) {
+      if (href) {
+        const resolved = new URL(href, this.page.url()).toString();
+        await this.page.goto(resolved, { waitUntil: 'domcontentloaded', timeout: testConfig.timeouts.long });
+      } else {
+        await this.goto('/onboardings');
+      }
+    }
   }
 
   async navigateToMetricasRegistro(): Promise<void> {

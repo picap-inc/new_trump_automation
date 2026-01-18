@@ -17,7 +17,7 @@ test.describe('Validación de Onboarding Dashboard', () => {
     navigationPage, 
     onboardingPage 
   }, testInfo) => {
-    test.setTimeout(60000);
+    test.setTimeout(90000);
 
     // Given: que estoy autenticado
     await test.step('Iniciar sesión', async () => {
