@@ -22,7 +22,7 @@ test.describe('Smoke de Marketing', () => {
     });
 
     await test.step('Abrir Dashboard de Marketing', async () => {
-      await page.goto('https://admin.picap.io/marketing_dashboard', { waitUntil: 'domcontentloaded' });
+      await marketingPageExtended.openMarketingDashboard();
       await loginPage.takeScreenshot(testInfo, '02 - Dashboard Marketing');
     });
 

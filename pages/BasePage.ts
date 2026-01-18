@@ -17,23 +17,45 @@ export class BasePage {
     this.sideNav = page.locator('#mySidenav');
   }
 
-  async goto(path: string = ''): Promise<void> {
-    const url = `${currentEnv.baseURL}${path}`;
-    for (let attempt = 1; attempt <= 3; attempt++) {
+  protected async safeGotoUrl(
+    url: string,
+    options: { waitUntil?: 'domcontentloaded' | 'load'; timeout?: number; waitForUrl?: string | RegExp; retries?: number } = {}
+  ): Promise<void> {
+    const {
+      waitUntil = 'domcontentloaded',
+      timeout = testConfig.timeouts.long,
+      waitForUrl,
+      retries = 2
+    } = options;
+
+    for (let attempt = 1; attempt <= retries; attempt += 1) {
+      if (this.page.isClosed()) {
+        throw new Error(`No se puede navegar a ${url} porque la página está cerrada.`);
+      }
       try {
-        await this.page.goto(url);
+        await this.page.goto(url, { waitUntil, timeout });
+        if (waitForUrl) {
+          await this.page.waitForURL(waitForUrl, { timeout }).catch(() => undefined);
+        }
         await this.waitHelpers.waitForPageLoad();
         return;
       } catch (error) {
-        if (attempt === 3) {
+        const message = String(error);
+        const isRetryable =
+          message.includes('net::ERR_ABORTED') ||
+          message.includes('frame was detached') ||
+          message.includes('Execution context was destroyed');
+        if (attempt >= retries || !isRetryable) {
           throw error;
         }
-        if (this.page.isClosed()) {
-          throw error;
-        }
-        await this.page.waitForTimeout(1000 * attempt);
+        await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
       }
     }
+  }
+
+  async goto(path: string = ''): Promise<void> {
+    const url = `${currentEnv.baseURL}${path}`;
+    await this.safeGotoUrl(url);
   }
 
   async clickElement(locator: Locator): Promise<void> {
@@ -71,11 +93,18 @@ export class BasePage {
     timeout = testConfig.timeouts.long
   ): Promise<void> {
     await this.waitHelpers.waitForElement(locator);
-    await Promise.all([
-      this.page.waitForURL(url, { timeout }),
-      locator.click()
-    ]);
-    await this.page.waitForLoadState('networkidle');
+    try {
+      await Promise.all([
+        this.page.waitForURL(url, { timeout }),
+        locator.click()
+      ]);
+    } catch (error) {
+      if (!this.page.isClosed() && (typeof url === 'string' ? this.page.url().includes(url) : url.test(this.page.url()))) {
+        return;
+      }
+      throw error;
+    }
+    await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
   }
 
   async isVisible(locator: Locator): Promise<boolean> {

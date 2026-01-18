@@ -357,23 +357,13 @@ export class MarketingPageExtended extends MarketingPage {
   }
 
   async navigateToTarifaDiferencial(): Promise<void> {
-    const gotoTarifa = async (url: string): Promise<void> => {
-      for (let attempt = 1; attempt <= 2; attempt += 1) {
-        try {
-          await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: testConfig.timeouts.extraLong });
-          return;
-        } catch (error) {
-          if (attempt === 2) throw error;
-          await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
-        }
-      }
-    };
-
     await this.ensureMarketingExpanded();
     const target = await this.resolveVisibleTarget([this.tarifaDiferencialLink, this.tarifaDiferencialTextLink]);
     if (!target) {
       await this.logSideNavLinks('Tarifa diferencial');
-      await gotoTarifa('https://admin.picap.io/pricing/sensitivity_scores');
+      await this.safeGotoUrl('https://admin.picap.io/pricing/sensitivity_scores', {
+        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/
+      });
       return;
     }
     await expect(target).toBeVisible({ timeout: testConfig.timeouts.medium });

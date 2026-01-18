@@ -91,14 +91,20 @@ export class MarketingPage extends BasePage {
    * Navega a la sección de Campañas
    */
   async navigateToCampaigns(): Promise<void> {
-    await this.clickAndWaitForURL(this.campaignsLink, 'https://admin.picap.io/campaigns');
+    await this.clickAndWaitForURL(this.campaignsLink, /\/campaigns/);
   }
 
   /**
    * Navega al Dashboard de Marketing
    */
   async navigateToDashboard(): Promise<void> {
-    await this.clickAndWaitForURL(this.dashboardLink, 'https://admin.picap.io/marketing_dashboard');
+    await this.clickAndWaitForURL(this.dashboardLink, /\/marketing_dashboard/);
+  }
+
+  async openMarketingDashboard(): Promise<void> {
+    await this.safeGotoUrl('https://admin.picap.io/marketing_dashboard', {
+      waitForUrl: /\/marketing_dashboard/
+    });
   }
 
   /**

@@ -31,7 +31,7 @@ export class PicashPage extends BasePage {
   private async navigateUsingLinkOrHref(link: Locator, fallbackPath: string): Promise<void> {
     if (await link.isVisible().catch(() => false)) {
       await this.clickElement(link);
-      await this.page.waitForLoadState('networkidle');
+      await this.waitHelpers.waitForPageLoad();
       return;
     }
 
