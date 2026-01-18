@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Navegación a módulo de PQRS', () => {
   test('Acceder y validar carga de PQRS', async ({ 
@@ -16,12 +15,6 @@ test.describe('Navegación a módulo de PQRS', () => {
     serviciosPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
     // When: abro el menú lateral
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();
@@ -41,13 +34,8 @@ test.describe('Navegación a módulo de PQRS', () => {
 
     // Then: debería verificar que la página de PQRS cargó correctamente
     await test.step('Verificar carga de página PQRS', async () => {
-      if (page.url().includes('/sessions/new')) {
-        await loginPage.login(users.admin.email, users.admin.password);
-        await navigationPage.openSideMenu();
-        await serviciosPage.navigateToServicios();
-        await serviciosPage.navigateToPQRS();
-      }
-      await expect(page).toHaveURL('https://admin.picap.io/pqrs');
+      await expect(page).not.toHaveURL(/\/sessions\/new/);
+      await expect(page).toHaveURL(/\/pqrs/);
       await loginPage.takeScreenshot(testInfo, '05 - Página PQRS verificada');
     });
   });

@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Filtros en módulo Todos los Servicios', () => {
   test('Aplicar filtros en Todos los servicios', async ({ 
@@ -16,12 +15,6 @@ test.describe('Filtros en módulo Todos los Servicios', () => {
     serviciosPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
     // When: abro el menú lateral
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();
@@ -32,17 +25,12 @@ test.describe('Filtros en módulo Todos los Servicios', () => {
     await test.step('Navegar a Todos los servicios', async () => {
       await serviciosPage.navigateToServicios();
       await serviciosPage.navigateToTodosServicios();
-      if (page.url().includes('/sessions/new')) {
-        await loginPage.login(users.admin.email, users.admin.password);
-        await navigationPage.openSideMenu();
-        await serviciosPage.navigateToServicios();
-        await serviciosPage.navigateToTodosServicios();
-      }
       await loginPage.takeScreenshot(testInfo, '03 - Todos los servicios');
     });
 
     // Then: debería estar en la página correcta
     await test.step('Validar URL', async () => {
+      await expect(page).not.toHaveURL(/\/sessions\/new/);
       await expect(page).toHaveURL('https://admin.picap.io/bookings', { timeout: 10000 });
       await loginPage.takeScreenshot(testInfo, '04 - URL validada');
     });

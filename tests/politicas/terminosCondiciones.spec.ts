@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Navegación al módulo Políticas Internas', () => {
   test('Ingresar a T&C y validar URL', async ({ 
@@ -16,12 +15,6 @@ test.describe('Navegación al módulo Políticas Internas', () => {
     politicasPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
     // When: abro el menú lateral
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();

@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Navegación al módulo Trump', () => {
   test('Ingresar a Pilot Safe y validar filtros', async ({ 
@@ -16,12 +15,6 @@ test.describe('Navegación al módulo Trump', () => {
     trumpPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
     // When: abro el menú lateral
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();
@@ -37,23 +30,13 @@ test.describe('Navegación al módulo Trump', () => {
     // And: entro a Pilot Safe
     await test.step('Click en Pilot Safe', async () => {
       await trumpPage.navigateToPilotSafe();
-      if (page.url().includes('/sessions/new')) {
-        await loginPage.login(users.admin.email, users.admin.password);
-        await navigationPage.openSideMenu();
-        await trumpPage.navigateToTrump();
-        await trumpPage.navigateToPilotSafe();
-      }
+      await expect(page).not.toHaveURL(/\/sessions\/new/);
       await loginPage.takeScreenshot(testInfo, '04 - Pilot Safe');
     });
 
     // Then: debería poder aplicar filtros
     await test.step('Aplicar filtros de búsqueda', async () => {
-      if (page.url().includes('/sessions/new')) {
-        await loginPage.login(users.admin.email, users.admin.password);
-        await navigationPage.openSideMenu();
-        await trumpPage.navigateToTrump();
-        await trumpPage.navigateToPilotSafe();
-      }
+      await expect(page).not.toHaveURL(/\/sessions\/new/);
       await trumpPage.applyFilters('Colombia', 'Inactiva', 'Picap Carro');
       await loginPage.takeScreenshot(testInfo, '05 - Filtros aplicados');
       

@@ -8,7 +8,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Validación del módulo Usuarios', () => {
   test('Flujo completo de búsqueda y navegación por filtros de estado', async ({ 
@@ -18,12 +17,6 @@ test.describe('Validación del módulo Usuarios', () => {
     usuariosPage 
   }, testInfo) => {
     test.setTimeout(250000);
-
-    // Given: que estoy autenticado
-    await test.step('Login en la plataforma', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
 
     // When: abro el menú lateral
     await test.step('Abrir barra lateral de navegación', async () => {

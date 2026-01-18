@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Validación del módulo Picash', () => {
   test('Ingresar a Picash - Comercios', async ({ 
@@ -17,12 +16,6 @@ test.describe('Validación del módulo Picash', () => {
     picashPage
   }, testInfo) => {
     test.setTimeout(120000);
-
-    // Given: que estoy autenticado en el sistema
-    await test.step('Login en la plataforma', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
 
     // When: abro el menú lateral general
     await test.step('Abrir barra lateral general de navegación', async () => {

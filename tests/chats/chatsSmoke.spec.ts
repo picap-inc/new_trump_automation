@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Smoke de módulo Chats', () => {
   test('Acceder a secciones principales de Chats', async ({
@@ -16,11 +15,6 @@ test.describe('Smoke de módulo Chats', () => {
     chatsPage
   }, testInfo) => {
     test.setTimeout(120000);
-
-    await test.step('Login', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login');
-    });
 
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();

@@ -38,6 +38,11 @@ export class NavigationPage extends BasePage {
     console.log('🔍 Esperando que el botón del menú esté disponible...');
     await this.ensurePageAlive();
 
+    const currentUrl = this.page.url();
+    if (currentUrl === 'about:blank' || currentUrl.includes('/sessions')) {
+      await this.safeGoto('/', { waitForUrl: /\/(?!sessions)/ });
+    }
+
     const hasVisibleLinks = await this.sideNav.getByRole('link').first().isVisible().catch(() => false);
     if (hasVisibleLinks) {
       console.log('✅ Menú lateral ya está visible.');
@@ -49,6 +54,9 @@ export class NavigationPage extends BasePage {
     await this.page
       .waitForURL((url) => !url.pathname.includes('/sessions'), { timeout: testConfig.timeouts.long })
       .catch(() => {});
+    if (this.page.url().includes('/sessions')) {
+      throw new Error('❌ Sesión inválida: la página redirigió al login.');
+    }
     
     // Esperar que el botón esté en el DOM y visible
     await expect(this.menuButton).toBeAttached({ timeout: testConfig.timeouts.long });

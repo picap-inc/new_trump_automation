@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Validación del módulo App', () => {
   test('Validar flujo completo modulo App', async ({ 
@@ -16,11 +15,10 @@ test.describe('Validación del módulo App', () => {
     appPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado
-    await test.step('Login y menú lateral', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
+    // Given: menú lateral disponible
+    await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();
-      await loginPage.takeScreenshot(testInfo, '01 - Login y menú');
+      await loginPage.takeScreenshot(testInfo, '01 - Menú lateral');
     });
 
     // When: navego al módulo App

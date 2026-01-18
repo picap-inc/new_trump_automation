@@ -14,6 +14,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './global-setup.ts',
   timeout: 60000, // 60 segundos por prueba
   fullyParallel: false, // Deshabilitado: ejecutar tests secuencialmente
   forbidOnly: !!process.env.CI,
@@ -26,6 +27,7 @@ export default defineConfig({
     actionTimeout: 15000, // 15s de espera máxima por acción
     navigationTimeout: 30000, // 30s de espera máxima para navegación
     headless: true, // Siempre headless para no abrir ventanas
+    storageState: 'auth.json',
     //screenshot: 'only-on-failure', // Capturas
   },
 

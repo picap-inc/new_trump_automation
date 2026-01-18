@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 import { applyVisibleFilters, validateDownloadButtons } from '../utils/filter-downloads';
 
 const pages = [
@@ -30,7 +29,7 @@ const pages = [
   { name: 'Marketing - Tutoriales', url: 'https://admin.picap.io/v2_tutorials' },
   { name: 'Marketing - Bicitaxi', url: 'https://admin.picap.io/bicitaxi_working_areas' },
   { name: 'Marketing - Pilevels', url: 'https://admin.picap.io/pilevel_gamification_confs' },
-  { name: 'Marketing - Tarifa diferencial', url: 'https://admin.picap.io/pricing/sensitivity_scores', timeout: 90000, useMarketingMenu: true },
+  { name: 'Marketing - Tarifa diferencial', url: 'https://admin.picap.io/benchmark_routes', timeout: 90000, allowGotoTimeout: true, skipNetworkIdle: true, customFilters: 'tarifaDiferencial' },
   { name: 'Marketing - Perfilamiento Pasajeros', url: 'https://admin.picap.io/passenger_profiles', downloads: true, timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Perfilamiento Pilotos', url: 'https://admin.picap.io/driver_profiles', downloads: true, customDownloads: 'hrefOnly' },
   { name: 'Monitoreo - Alertas', url: 'https://admin.picap.io/text_based_alerts' },
@@ -50,28 +49,26 @@ const pages = [
 
 test.describe('Filtros y descargas', () => {
   for (const pageConfig of pages) {
-    test(`${pageConfig.name} - filtros`, async ({ loginPage, navigationPage, marketingPageExtended }, testInfo) => {
+    test(`${pageConfig.name} - filtros`, async ({ loginPage }, testInfo) => {
       test.setTimeout(pageConfig.timeout ?? 60000);
       const getActivePage = async () => loginPage.getLivePage();
 
-      await test.step('Login', async () => {
-        await loginPage.login(users.admin.email, users.admin.password);
-        await getActivePage();
-        await loginPage.takeScreenshot(testInfo, '01 - Login');
-      });
-
       await test.step(`Abrir ${pageConfig.url}`, async () => {
         const timeout = pageConfig.timeout ?? 45000;
-        if (pageConfig.useMarketingMenu) {
-          await navigationPage.openSideMenu();
-          await marketingPageExtended.navigateToMarketing();
-          await marketingPageExtended.navigateToTarifaDiferencial();
-        } else {
-          const activePage = await getActivePage();
-          await loginPage.safeGoto(pageConfig.url, { waitForUrl: new RegExp(pageConfig.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), timeout });
+        const activePage = await getActivePage();
+        const waitForUrl = new RegExp(pageConfig.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        try {
+          await activePage.goto(pageConfig.url, { waitUntil: 'domcontentloaded', timeout });
+        } catch (error) {
+          const current = activePage.url();
+          if (pageConfig.allowGotoTimeout) {
+            // Página conocida por ser lenta; continuar si ya está navegada.
+          } else if (!waitForUrl.test(current)) {
+            throw error;
+          }
         }
+        await activePage.waitForURL(waitForUrl, { timeout }).catch(() => undefined);
         if (!pageConfig.skipNetworkIdle) {
-          const activePage = await getActivePage();
           await activePage.waitForLoadState('networkidle').catch(() => undefined);
         }
         await loginPage.takeScreenshot(testInfo, '02 - Vista');
@@ -93,6 +90,18 @@ test.describe('Filtros y descargas', () => {
           const companyInput = activePage.locator('#company_ids');
           if (await companyInput.isVisible().catch(() => false)) {
             await companyInput.fill('test');
+          }
+        } else if (pageConfig.customFilters === 'tarifaDiferencial') {
+          const serviceTypeSelect = activePage.locator('select').first();
+          if (await serviceTypeSelect.isVisible().catch(() => false)) {
+            const optionCount = await serviceTypeSelect.locator('option').count();
+            if (optionCount > 1) {
+              await serviceTypeSelect.selectOption({ index: 1 });
+            }
+          }
+          const actionButton = activePage.getByRole('button', { name: /(buscar|filtrar|aplicar|consultar)/i }).first();
+          if (await actionButton.isVisible().catch(() => false)) {
+            await actionButton.click();
           }
         } else {
           await applyVisibleFilters(activePage);

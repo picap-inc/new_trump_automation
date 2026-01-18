@@ -8,7 +8,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Validación de creación y edición de compañías en Pibox', () => {
   test('Crear, filtrar y editar compañía en Pibox', async ({ 
@@ -17,11 +16,6 @@ test.describe('Validación de creación y edición de compañías en Pibox', () 
     piboxDashboardPage 
   }, testInfo) => {
     
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login');
-    });
-
     await test.step('Abrir menú lateral general', async () => {
       await navigationPage.openSideMenu();
       await loginPage.takeScreenshot(testInfo, '02 - Menú lateral');

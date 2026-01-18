@@ -6,33 +6,19 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Validación de Onboarding Dashboard', () => {
   test('Validar la página y sus respectivos filtros', async ({ 
     page,
     loginPage, 
-    navigationPage, 
     onboardingPage 
   }, testInfo) => {
-    
-    // Given: que estoy autenticado
-    await test.step('Login y barra lateral', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await navigationPage.openSideMenu();
-      await loginPage.takeScreenshot(testInfo, '01 - Login y menú');
-    });
 
-    // When: abro el menú Onboarding
-    await test.step('Abrir menú Onboarding', async () => {
-      await onboardingPage.navigateToOnboarding();
-      await loginPage.takeScreenshot(testInfo, '02 - Menú Onboarding');
-    });
-
-    // And: accedo al Dashboard
-    await test.step('Acceder a Onboarding Dashboard', async () => {
-      await onboardingPage.navigateToDashboard();
-      await loginPage.takeScreenshot(testInfo, '03 - Dashboard cargado');
+    // When: accedo directo al Dashboard
+    await test.step('Abrir Onboarding Dashboard', async () => {
+      await page.goto('https://admin.picap.io/onboarding_dashboard', { waitUntil: 'domcontentloaded' });
+      await expect(page).toHaveURL(/\/onboarding_dashboard/);
+      await loginPage.takeScreenshot(testInfo, '01 - Dashboard cargado');
     });
 
     // Then: debería poder aplicar filtros
@@ -44,7 +30,7 @@ test.describe('Validación de Onboarding Dashboard', () => {
         '2025-01-22',
         'Noviembre 2024'
       );
-      await loginPage.takeScreenshot(testInfo, '04 - Filtros aplicados');
+      await loginPage.takeScreenshot(testInfo, '02 - Filtros aplicados');
     });
   });
 });

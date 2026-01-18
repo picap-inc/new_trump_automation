@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 const homeCards = [
   { heading: 'Servicios', href: '/bookings', url: /\/bookings/ },
@@ -19,10 +18,10 @@ const homeCards = [
 
 test.describe('Smoke de Inicio', () => {
   test('Acceder a opciones principales', async ({ page, loginPage }, testInfo) => {
-    await test.step('Login', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
+    await test.step('Abrir inicio', async () => {
+      await page.goto('https://admin.picap.io/', { waitUntil: 'domcontentloaded' });
       await expect(page).toHaveURL(/\/$/);
-      await loginPage.takeScreenshot(testInfo, '01 - Login');
+      await loginPage.takeScreenshot(testInfo, '01 - Inicio');
     });
 
     for (const card of homeCards) {

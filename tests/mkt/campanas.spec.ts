@@ -8,51 +8,32 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
+import { gotoMarketingLink } from '../utils/marketing-links';
 
 test.describe('Sub módulo Marketing y Growth', () => {
   test('Validar filtros en la página de Campañas', async ({ 
     page,
     loginPage, 
-    navigationPage, 
     marketingPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado en el sistema
-    await test.step('Login en la plataforma', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
-    // When: abro el menú lateral
-    await test.step('Abrir menú lateral', async () => {
-      await navigationPage.openSideMenu();
-      await loginPage.takeScreenshot(testInfo, '02 - Menú lateral abierto');
-    });
-
-    // And: navego al módulo de Marketing
-    await test.step('Seleccionar módulo Marketing y Growth', async () => {
-      await marketingPage.navigateToMarketing();
-      await loginPage.takeScreenshot(testInfo, '03 - Marketing y Growth');
-    });
-
-    // And: navego a Campañas
+    // Given: navego directo a Campañas
     await test.step('Seleccionar Campañas', async () => {
-      await marketingPage.navigateToCampaigns();
-      await loginPage.takeScreenshot(testInfo, '04 - Página de Campañas');
+      await gotoMarketingLink(page, /Campañas/i, '/campaigns');
+      await loginPage.takeScreenshot(testInfo, '01 - Página de Campañas');
     });
 
     // Then: debería estar en la página correcta
     await test.step('Validar página Campañas', async () => {
       await expect(page).toHaveURL('https://admin.picap.io/campaigns', { timeout: 10000 });
-      await loginPage.takeScreenshot(testInfo, '05 - URL validada');
+      await loginPage.takeScreenshot(testInfo, '02 - URL validada');
     });
 
     // When: aplico filtros de fecha
     await test.step('Seleccionar fecha "Desde" y "Hasta"', async () => {
       const currentDate = new Date().toISOString().split('T')[0];
       await marketingPage.filterByDateRange('2025-02-01', currentDate);
-      await loginPage.takeScreenshot(testInfo, '06 - Fechas filtradas');
+      await loginPage.takeScreenshot(testInfo, '03 - Fechas filtradas');
     });
 
     // And: selecciono estado de campaña

@@ -6,7 +6,6 @@
  */
 
 import { test, expect } from '../../fixtures/pages';
-import { users } from '../../config/environments';
 
 test.describe('Navegación al módulo de Todos los Servicios', () => {
   test('Acceder a la sección de Todos los Servicios', async ({ 
@@ -16,12 +15,6 @@ test.describe('Navegación al módulo de Todos los Servicios', () => {
     serviciosPage 
   }, testInfo) => {
     
-    // Given: que estoy autenticado en el sistema
-    await test.step('Iniciar sesión', async () => {
-      await loginPage.login(users.admin.email, users.admin.password);
-      await loginPage.takeScreenshot(testInfo, '01 - Login exitoso');
-    });
-
     // When: abro el menú lateral
     await test.step('Abrir menú lateral', async () => {
       await navigationPage.openSideMenu();

@@ -9,6 +9,7 @@ import { test, expect } from '../../fixtures/pages';
 import { users } from '../../config/environments';
 
 test.describe('Validar el login de trumpDev', () => {
+  test.use({ storageState: undefined });
   test('Completar el login con email y contraseña válidos', async ({ 
     page, 
     loginPage, 
