@@ -40,6 +40,9 @@ export class WaitHelpers {
         return await action();
       } catch (error) {
         lastError = error as Error;
+        if (this.page.isClosed()) {
+          throw lastError;
+        }
         if (attempt < maxAttempts) {
           await this.page.waitForTimeout(1000 * attempt);
         }

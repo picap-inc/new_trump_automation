@@ -30,12 +30,19 @@ jobs:
           FLAKY=$(grep -oE '[0-9]+ flaky' playwright-output.txt | awk '{print $1}' || echo 0)
           TOTAL=$((PASSED + FAILED + SKIPPED + FLAKY))
           UNIQUE_TESTS=$(node -e "const fs=require('fs');const path=require('path');const root=path.join(process.cwd(),'tests');let count=0;const walk=(dir)=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory()) walk(full);else if(entry.isFile()&&entry.name.endsWith('.spec.ts')){const content=fs.readFileSync(full,'utf8');const matches=content.match(/\\btest\\s*\\(/g);if(matches) count+=matches.length;}}};walk(root);process.stdout.write(String(count));")
+          FAIL_CASE=$(grep -m1 "›" playwright-output.txt | sed 's/"/\\"/g' || echo "")
+          FAIL_ERROR=$(grep -m1 "Error:" playwright-output.txt | sed 's/"/\\"/g' || echo "")
+          ERROR_REASON=$(echo "${FAIL_CASE} ${FAIL_ERROR}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo "")
           echo "PASSED_COUNT=$PASSED" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED" >> $GITHUB_ENV
           echo "SKIPPED_COUNT=$SKIPPED" >> $GITHUB_ENV
           echo "FLAKY_COUNT=$FLAKY" >> $GITHUB_ENV
           echo "TOTAL_COUNT=$TOTAL" >> $GITHUB_ENV
           echo "UNIQUE_TESTS_COUNT=$UNIQUE_TESTS" >> $GITHUB_ENV
+          echo "ERROR_REASON=$ERROR_REASON" >> $GITHUB_ENV
+          if [ -n "$ERROR_REASON" ]; then
+            echo "Motivo del error: $ERROR_REASON" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 👄 Subir reporte HTML como artefacto
         uses: actions/upload-artifact@v4
@@ -84,6 +91,11 @@ jobs:
                         {
                           "textParagraph": {
                             "text": "✅ Satisfactorias: *${{ env.UNIQUE_TESTS_COUNT }}*  |  ❌ Fallidas: *${{ env.FAILED_COUNT }}*  |  ⚠️ Inestables: *${{ env.FLAKY_COUNT }}*  |  ⏭ Omitidas: *${{ env.SKIPPED_COUNT }}*  |  📊 Total: *${{ env.UNIQUE_TESTS_COUNT }}*"
+                          }
+                        },
+                        {
+                          "textParagraph": {
+                            "text": "🧾 Motivo: ${{ env.ERROR_REASON }}"
                           }
                         },
                         {

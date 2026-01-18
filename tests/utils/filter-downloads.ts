@@ -44,6 +44,10 @@ export const applyVisibleFilters = async (page: Page): Promise<void> => {
   const today = formatToday();
   const monthValue = formatMonth();
 
+  if (page.isClosed()) {
+    throw new Error('La página se cerró antes de aplicar filtros.');
+  }
+
   const selects = page.locator('select');
   const selectCount = await selects.count();
   for (let i = 0; i < selectCount; i += 1) {

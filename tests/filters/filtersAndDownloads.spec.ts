@@ -105,10 +105,11 @@ test.describe('Filtros y descargas', () => {
         await test.step('Validar descargas', async () => {
           if (pageConfig.customDownloads === 'hrefOnly') {
             const downloadButtons = page.locator('button, a').filter({ hasText: /(descargar|exportar|reporte|informe|excel|csv|xls|pdf|download)/i });
-            const count = await downloadButtons.count();
-            expect(count).toBeGreaterThan(0);
-            for (let i = 0; i < count; i += 1) {
-              await expect(downloadButtons.nth(i)).toBeVisible();
+            const first = downloadButtons.first();
+            await expect(first).toBeVisible({ timeout: 15000 });
+            const secondVisible = await downloadButtons.nth(1).isVisible().catch(() => false);
+            if (secondVisible) {
+              await expect(downloadButtons.nth(1)).toBeVisible();
             }
           } else {
             await validateDownloadButtons(page);

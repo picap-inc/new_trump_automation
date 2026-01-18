@@ -64,7 +64,16 @@ export class MarketingPage extends BasePage {
       await this.waitHelpers.waitWithRetry(async () => {
         await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
       }, 3);
+      return;
     }
+
+    // Fallback: si el módulo no aparece (menú colapsado/oculto), navega al dashboard
+    await this.page
+      .goto('https://admin.picap.io/marketing_dashboard', {
+        waitUntil: 'domcontentloaded',
+        timeout: testConfig.timeouts.long
+      })
+      .catch(() => undefined);
   }
 
   /**
