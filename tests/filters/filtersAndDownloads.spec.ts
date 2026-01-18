@@ -21,7 +21,7 @@ const pages = [
   { name: 'Marketing - Verificaciones Fraude', url: 'https://admin.picap.io/campaigns/fraud_verify' },
   { name: 'Marketing - Rachas', url: 'https://admin.picap.io/streak_configs', timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Campañas Promocodes', url: 'https://admin.picap.io/promo_code_campaigns' },
-  { name: 'Marketing - Promo Codes', url: 'https://admin.picap.io/promo_codes' },
+  { name: 'Marketing - Promo Codes', url: 'https://admin.picap.io/promo_codes', timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Notificaciones', url: 'https://admin.picap.io/notifications' },
   { name: 'Marketing - Push masivos', url: 'https://admin.picap.io/push_notification_tasks', timeout: 90000, skipNetworkIdle: true },
   { name: 'Marketing - Visuales Banners', url: 'https://admin.picap.io/home_sliders' },
@@ -66,8 +66,14 @@ test.describe('Filtros y descargas', () => {
           await marketingPageExtended.navigateToTarifaDiferencial();
         } else {
           try {
+            if (page.isClosed()) {
+              throw new Error(`Página cerrada antes de navegar a ${pageConfig.url}`);
+            }
             await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded', timeout });
           } catch (_) {
+            if (page.isClosed()) {
+              throw new Error(`Página cerrada antes de reintentar ${pageConfig.url}`);
+            }
             await page.goto('https://admin.picap.io/', { waitUntil: 'domcontentloaded', timeout });
             await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded', timeout });
           }
