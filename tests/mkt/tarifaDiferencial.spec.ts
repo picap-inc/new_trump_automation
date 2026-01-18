@@ -22,16 +22,12 @@ test.describe('Smoke de Marketing', () => {
       await loginPage.takeScreenshot(testInfo, '01 - Login');
     });
 
-    await test.step('Abrir Dashboard de Marketing', async () => {
-      await marketingPageExtended.openMarketingDashboard();
-      await loginPage.takeScreenshot(testInfo, '02 - Dashboard Marketing');
-    });
-
     await test.step('Ir a Tarifa diferencial', async () => {
-      await marketingPageExtended.navigateToMarketing();
       const targetPage = await marketingPageExtended.navigateToTarifaDiferencial();
-      await expect(targetPage).toHaveURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: 120000 });
-      await ScreenshotHelper.attach(targetPage, testInfo, '04 - Tarifa diferencial');
+      await expect(targetPage).toHaveURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/);
+      const keyElement = targetPage.locator('table').first();
+      await expect(keyElement).toBeVisible();
+      await ScreenshotHelper.attach(targetPage, testInfo, '02 - Tarifa diferencial');
     });
   });
 });

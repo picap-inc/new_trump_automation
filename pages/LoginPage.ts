@@ -26,53 +26,26 @@ export class LoginPage extends BasePage {
    * Timeout 20s: Backend puede tardar en responder
    */
   async login(email: string, password: string): Promise<void> {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      await this.goto('/');
-      const userMenuButton = this.page.getByRole('button', { name: /Abrir menú de usuario/i });
-      const sideNav = this.page.locator('#mySidenav');
-      const alreadyLoggedIn = (await Promise.all([
-        this.welcomeHeading.isVisible().catch(() => false),
-        userMenuButton.isVisible().catch(() => false),
-        sideNav.isVisible().catch(() => false)
-      ])).some(Boolean);
+    await this.ensurePageAlive();
+    const userMenuButton = this.page.getByRole('button', { name: /Abrir menú de usuario/i });
+    const sideNav = this.page.locator('#mySidenav');
+    const alreadyLoggedIn = (await Promise.all([
+      this.welcomeHeading.isVisible().catch(() => false),
+      userMenuButton.isVisible().catch(() => false),
+      sideNav.isVisible().catch(() => false)
+    ])).some(Boolean);
 
-      if (alreadyLoggedIn) {
-        return;
-      }
-
-      try {
-        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.long });
-      } catch (error) {
-        if (attempt === 2) {
-          throw error;
-        }
-        await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
-        continue;
-      }
-
-      await this.fillInput(this.emailInput, email);
-      await this.fillInput(this.passwordInput, password);
-      await this.waitHelpers.waitForElement(this.loginBtn);
-      await this.loginBtn.click({ noWaitAfter: true });
-
-      try {
-        await this.verifyLoginSuccess();
-        return;
-      } catch (error) {
-        if (attempt === 2) throw error;
-        await this.page.waitForLoadState('domcontentloaded').catch(() => {});
-        const stillLoggedIn = (await Promise.all([
-          this.welcomeHeading.isVisible().catch(() => false),
-          userMenuButton.isVisible().catch(() => false),
-          sideNav.isVisible().catch(() => false)
-        ])).some(Boolean);
-        if (stillLoggedIn) {
-          return;
-        }
-        await this.page.goto('https://admin.picap.io/sessions/new', { waitUntil: 'domcontentloaded' }).catch(() => {});
-        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.medium });
-      }
+    if (alreadyLoggedIn) {
+      return;
     }
+
+    await this.safeGoto('/sessions/new', { waitForUrl: /\/sessions\/new/ });
+    await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.long });
+    await this.fillInput(this.emailInput, email);
+    await this.fillInput(this.passwordInput, password);
+    await this.waitHelpers.waitForElement(this.loginBtn);
+    await this.loginBtn.click({ noWaitAfter: true });
+    await this.verifyLoginSuccess();
   }
 
   /**

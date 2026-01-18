@@ -80,40 +80,20 @@ export class BasePage {
 
   protected async safeGotoUrl(
     url: string,
-    options: { waitUntil?: 'domcontentloaded' | 'load'; timeout?: number; waitForUrl?: string | RegExp; retries?: number } = {}
+    options: { waitUntil?: 'domcontentloaded' | 'load' | 'commit'; timeout?: number; waitForUrl?: string | RegExp } = {}
   ): Promise<void> {
     const {
       waitUntil = 'domcontentloaded',
       timeout = testConfig.timeouts.long,
-      waitForUrl,
-      retries = 1
+      waitForUrl
     } = options;
 
-    for (let attempt = 1; attempt <= retries; attempt += 1) {
-      await this.ensurePageAlive();
-      try {
-        await this.page.goto(url, { waitUntil, timeout });
-        if (waitForUrl) {
-          await this.page.waitForURL(waitForUrl, { timeout }).catch(() => undefined);
-        }
-        await this.waitHelpers.waitForPageLoad();
-        return;
-      } catch (error) {
-        const message = String(error);
-        const isRetryable =
-          message.includes('net::ERR_ABORTED') ||
-          message.includes('frame was detached') ||
-          message.includes('Execution context was destroyed') ||
-          message.includes('Timeout') ||
-          message.includes('Target page, context or browser has been closed');
-        if (attempt >= retries || !isRetryable) {
-          return;
-        }
-        await this.ensurePageAlive();
-        await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
-        await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
-      }
+    await this.ensurePageAlive();
+    await this.page.goto(url, { waitUntil, timeout });
+    if (waitForUrl) {
+      await this.page.waitForURL(waitForUrl, { timeout });
     }
+    await this.page.waitForLoadState('networkidle').catch(() => undefined);
   }
 
   async goto(path: string = ''): Promise<void> {
@@ -121,11 +101,12 @@ export class BasePage {
     await this.safeGotoUrl(url);
   }
 
-  async safeGoto(urlOrPath: string, options: { waitForUrl?: string | RegExp; timeout?: number } = {}): Promise<void> {
+  async safeGoto(urlOrPath: string, options: { waitForUrl?: string | RegExp; timeout?: number; waitUntil?: 'domcontentloaded' | 'load' | 'commit' } = {}): Promise<void> {
     const target = urlOrPath.startsWith('http') ? urlOrPath : `${currentEnv.baseURL}${urlOrPath}`;
     await this.safeGotoUrl(target, {
       waitForUrl: options.waitForUrl,
-      timeout: options.timeout
+      timeout: options.timeout,
+      waitUntil: options.waitUntil
     });
   }
 

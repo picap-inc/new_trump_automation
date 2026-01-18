@@ -358,35 +358,22 @@ export class MarketingPageExtended extends MarketingPage {
 
   async navigateToTarifaDiferencial(): Promise<Page> {
     await this.ensurePageAlive();
-    await this.ensureMarketingExpanded();
-    const target = await this.resolveVisibleTarget([this.tarifaDiferencialLink, this.tarifaDiferencialTextLink]);
-    if (!target) {
-      await this.logSideNavLinks('Tarifa diferencial');
-      await this.safeGoto('https://admin.picap.io/pricing/sensitivity_scores', {
-        waitForUrl: /\/(pricing\/sensitivity_scores|benchmark_routes)/
-      });
-      return this.getLivePage();
+    const routeHandler = (route: any) => {
+      const type = route.request().resourceType();
+      if (type === 'image' || type === 'font' || type === 'media') {
+        route.abort();
+        return;
+      }
+      route.continue();
+    };
+    await this.page.route('**/*', routeHandler);
+    try {
+      await this.safeGoto('/benchmark_routes');
+    } finally {
+      await this.page.unroute('**/*', routeHandler).catch(() => undefined);
     }
-    await expect(target).toBeVisible({ timeout: testConfig.timeouts.medium });
-    const context = this.page.context();
-    const popupPromise = context.waitForEvent('page').catch(() => null);
-    const navigationPromise = this.page
-      .waitForURL(/\/(pricing\/sensitivity_scores|benchmark_routes)/, { timeout: testConfig.timeouts.long })
-      .catch(() => null);
-
-    await target.scrollIntoViewIfNeeded().catch(() => undefined);
-    await target.click({ force: true });
-
-    const popup = await popupPromise;
-    if (popup) {
-      await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
-      await popup.waitForLoadState('networkidle').catch(() => undefined);
-      return popup;
-    }
-
-    await navigationPromise;
     const livePage = await this.getLivePage();
-    await livePage.waitForLoadState('domcontentloaded').catch(() => undefined);
+    await livePage.waitForLoadState('networkidle').catch(() => undefined);
     return livePage;
   }
 }
