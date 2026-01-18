@@ -82,6 +82,11 @@ export class OnboardingPage extends BasePage {
   }
 
   async filterUsuariosOnboarding(country: string, city: string, vehicleType: string): Promise<void> {
+    await this.ensurePageAlive();
+    if (!/\/onboardings/.test(this.page.url())) {
+      await this.safeGoto('/onboardings', { waitForUrl: /\/onboardings/ });
+    }
+    await this.waitForLoadingOverlay();
     const paisSelect = this.page.locator('#country');
     await expect(paisSelect).toBeVisible();
     await paisSelect.selectOption({ label: country });
