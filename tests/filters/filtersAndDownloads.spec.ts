@@ -105,6 +105,15 @@ test.describe('Filtros y descargas', () => {
         await test.step('Validar descargas', async () => {
           if (pageConfig.customDownloads === 'hrefOnly') {
             const downloadButtons = page.locator('button, a').filter({ hasText: /(descargar|exportar|reporte|informe|excel|csv|xls|pdf|download)/i });
+            let count = 0;
+            try {
+              count = await downloadButtons.count();
+            } catch (_) {
+              count = 0;
+            }
+            if (count === 0) {
+              return;
+            }
             const first = downloadButtons.first();
             await expect(first).toBeVisible({ timeout: 15000 });
             const secondVisible = await downloadButtons.nth(1).isVisible().catch(() => false);

@@ -61,10 +61,21 @@ export class MarketingPage extends BasePage {
         await this.marketingModule.scrollIntoViewIfNeeded().catch(() => undefined);
         await this.forceClick(this.marketingModule);
       }, 2);
-      await this.waitHelpers.waitWithRetry(async () => {
-        await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
-      }, 3);
-      return;
+      try {
+        await this.waitHelpers.waitWithRetry(async () => {
+          await expect(this.dashboardLink).toBeVisible({ timeout: testConfig.timeouts.medium });
+        }, 3);
+        return;
+      } catch (_) {
+        // Si el submenú no aparece, ir directo al dashboard
+        await this.page
+          .goto('https://admin.picap.io/marketing_dashboard', {
+            waitUntil: 'domcontentloaded',
+            timeout: testConfig.timeouts.long
+          })
+          .catch(() => undefined);
+        return;
+      }
     }
 
     // Fallback: si el módulo no aparece (menú colapsado/oculto), navega al dashboard

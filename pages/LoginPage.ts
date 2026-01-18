@@ -40,6 +40,16 @@ export class LoginPage extends BasePage {
         return;
       }
 
+      try {
+        await this.emailInput.waitFor({ state: 'visible', timeout: testConfig.timeouts.long });
+      } catch (error) {
+        if (attempt === 2) {
+          throw error;
+        }
+        await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        continue;
+      }
+
       await this.fillInput(this.emailInput, email);
       await this.fillInput(this.passwordInput, password);
       await this.waitHelpers.waitForElement(this.loginBtn);
