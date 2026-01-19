@@ -143,16 +143,38 @@ export class MarketingPage extends BasePage {
    * Verifica que la página de Dashboard esté cargada
    */
   async verifyDashboardLoaded(): Promise<void> {
+    await this.waitForDashboardReady();
+  }
+
+  async waitForDashboardReady(): Promise<void> {
+    await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => undefined);
     const dashboardHeading = this.page.getByRole('heading', { name: 'Usuarios registrados' });
-    await expect(dashboardHeading).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await expect(dashboardHeading).toBeVisible({ timeout: testConfig.timeouts.long });
+    await expect(this.dashboardCitySelect).toBeAttached({ timeout: testConfig.timeouts.long });
+  }
+
+  private async waitForDashboardFiltersReady(): Promise<void> {
+    await this.page
+      .waitForResponse((response) => /marketing_dashboard|cities|drivers/i.test(response.url()), {
+        timeout: testConfig.timeouts.medium
+      })
+      .catch(() => undefined);
+    await expect(this.dashboardDateInput).toBeVisible({ timeout: testConfig.timeouts.long });
+    await expect(this.dashboardCitySelect).toBeVisible({ timeout: testConfig.timeouts.long });
+    await this.page.waitForFunction(
+      () => {
+        const select = document.querySelector('select') as HTMLSelectElement | null;
+        return Boolean(select && select.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    ).catch(() => undefined);
   }
 
   /**
    * Aplica filtro de ciudad en el dashboard (smoke)
    */
   async filterDashboardByCity(cityLabel: string): Promise<void> {
-    await expect(this.dashboardDateInput).toBeVisible({ timeout: testConfig.timeouts.medium });
-    await expect(this.dashboardCitySelect).toBeVisible({ timeout: testConfig.timeouts.medium });
+    await this.waitForDashboardFiltersReady();
     await this.dashboardCitySelect.selectOption({ label: cityLabel });
   }
 }

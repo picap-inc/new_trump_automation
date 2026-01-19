@@ -35,7 +35,46 @@ export class OnboardingPage extends BasePage {
     await this.clickAndWaitForURL(this.onboardingDashboardLink, 'https://admin.picap.io/onboarding_dashboard');
   }
 
+  async waitForDashboardReady(): Promise<void> {
+    await this.page
+      .waitForResponse((response) => /onboarding_dashboard|countries|cities/i.test(response.url()), {
+        timeout: testConfig.timeouts.medium
+      })
+      .catch(() => undefined);
+    const countrySelect = this.page.locator('#country');
+    const citySelect = this.page.locator('#city');
+    await expect(countrySelect).toBeAttached({ timeout: testConfig.timeouts.long });
+    await expect(countrySelect).toBeVisible({ timeout: testConfig.timeouts.long });
+    await expect(citySelect).toBeAttached({ timeout: testConfig.timeouts.long });
+    await expect(citySelect).toBeVisible({ timeout: testConfig.timeouts.long });
+    await this.page.waitForFunction(
+      () => {
+        const country = document.querySelector('#country') as HTMLSelectElement | null;
+        const city = document.querySelector('#city') as HTMLSelectElement | null;
+        return Boolean(country && country.options.length > 1 && city && city.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    );
+  }
+
+  private async waitForDashboardFiltersReady(): Promise<void> {
+    await this.page
+      .waitForResponse((response) => /countries|cities|onboarding_dashboard/i.test(response.url()), {
+        timeout: testConfig.timeouts.medium
+      })
+      .catch(() => undefined);
+    await this.waitForDashboardReady();
+    await this.page.waitForFunction(
+      () => {
+        const select = document.querySelector('#country') as HTMLSelectElement | null;
+        return Boolean(select && select.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    );
+  }
+
   async applyDashboardFilters(country: string, city: string, activationDate: string, newDriversDate: string, monthStatus: string): Promise<void> {
+    await this.waitForDashboardFiltersReady();
     await this.page.locator('#country').selectOption({ label: country });
     await this.page.waitForFunction(
       () => {
@@ -81,12 +120,46 @@ export class OnboardingPage extends BasePage {
     }
   }
 
+  async waitForMetricasRegistroReady(): Promise<void> {
+    await this.page.waitForLoadState('networkidle', { timeout: testConfig.timeouts.long }).catch(() => undefined);
+    const heading = this.page.getByRole('heading', { name: /Métricas de Registro|Registro/i }).first();
+    const table = this.page.locator('table').first();
+    await this.waitHelpers.waitWithRetry(async () => {
+      await Promise.any([
+        expect(heading).toBeVisible({ timeout: testConfig.timeouts.medium }),
+        expect(table).toBeVisible({ timeout: testConfig.timeouts.medium })
+      ]);
+    }, 2);
+  }
+
+  private async waitForUsuariosFiltersReady(): Promise<void> {
+    await this.page
+      .waitForResponse((response) => /onboardings|countries|cities/i.test(response.url()), {
+        timeout: testConfig.timeouts.medium
+      })
+      .catch(() => undefined);
+    const paisSelect = this.page.locator('#country');
+    const ciudadSelect = this.page.locator('#city');
+    await expect(paisSelect).toBeAttached({ timeout: testConfig.timeouts.long });
+    await expect(paisSelect).toBeVisible({ timeout: testConfig.timeouts.long });
+    await expect(ciudadSelect).toBeAttached({ timeout: testConfig.timeouts.long });
+    await expect(ciudadSelect).toBeVisible({ timeout: testConfig.timeouts.long });
+    await this.page.waitForFunction(
+      () => {
+        const select = document.querySelector('#city') as HTMLSelectElement | null;
+        return Boolean(select && select.options.length > 1);
+      },
+      { timeout: testConfig.timeouts.long }
+    );
+  }
+
   async filterUsuariosOnboarding(country: string, city: string, vehicleType: string): Promise<void> {
     await this.ensurePageAlive();
     if (!/\/onboardings/.test(this.page.url())) {
       await this.safeGoto('/onboardings', { waitForUrl: /\/onboardings/ });
     }
     await this.waitForLoadingOverlay();
+    await this.waitForUsuariosFiltersReady();
     const paisSelect = this.page.locator('#country');
     await expect(paisSelect).toBeVisible();
     await paisSelect.selectOption({ label: country });

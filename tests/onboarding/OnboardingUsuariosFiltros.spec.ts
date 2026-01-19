@@ -20,7 +20,7 @@ test.describe('Validación de Onboarding Dashboard', () => {
     // When: entro directo a Usuarios onboarding
     await test.step('Abrir Usuarios onboarding', async () => {
       try {
-        await page.goto('https://admin.picap.io/onboardings', { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await page.goto('https://admin.picap.io/onboardings', { waitUntil: 'networkidle', timeout: 60000 });
       } catch (error) {
         if (!/\/onboardings/.test(page.url())) {
           throw error;

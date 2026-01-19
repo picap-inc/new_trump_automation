@@ -16,8 +16,8 @@ test.describe('Validación de Onboarding Dashboard', () => {
 
     // When: accedo directo al Dashboard
     await test.step('Abrir Onboarding Dashboard', async () => {
-      await page.goto('https://admin.picap.io/onboarding_dashboard', { waitUntil: 'domcontentloaded' });
-      await expect(page).toHaveURL(/\/onboarding_dashboard/);
+      await page.goto('https://admin.picap.io/onboarding_dashboard', { waitUntil: 'networkidle', timeout: 60000 });
+      await onboardingPage.waitForDashboardReady();
       await loginPage.takeScreenshot(testInfo, '01 - Dashboard cargado');
     });
 

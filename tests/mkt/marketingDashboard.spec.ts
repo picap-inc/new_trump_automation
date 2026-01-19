@@ -14,7 +14,7 @@ test.describe('Smoke de Marketing', () => {
     marketingPage
   }, testInfo) => {
     await test.step('Ir a Dashboard', async () => {
-      await page.goto('https://admin.picap.io/marketing_dashboard', { waitUntil: 'domcontentloaded' });
+      await page.goto('https://admin.picap.io/marketing_dashboard', { waitUntil: 'networkidle', timeout: 60000 });
       await marketingPage.verifyDashboardLoaded();
       await expect(page).toHaveURL(/\/marketing_dashboard/);
       await loginPage.takeScreenshot(testInfo, '01 - Dashboard');

@@ -53,6 +53,19 @@ export const applyVisibleFilters = async (page: Page): Promise<void> => {
   for (let i = 0; i < selectCount; i += 1) {
     const select = selects.nth(i);
     if (!(await select.isVisible().catch(() => false))) continue;
+    const selectId = (await select.getAttribute('id').catch(() => null)) || '';
+    if (selectId === 'country' || selectId === 'city') {
+      await page
+        .waitForFunction(
+          (id) => {
+            const el = document.getElementById(id) as HTMLSelectElement | null;
+            return Boolean(el && el.options.length > 1);
+          },
+          selectId,
+          { timeout: 15000 }
+        )
+        .catch(() => undefined);
+    }
     const options = await select.locator('option').count();
     if (options > 1) {
       await select.selectOption({ index: 1 });

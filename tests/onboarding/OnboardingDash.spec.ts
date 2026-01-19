@@ -10,11 +10,18 @@ import { test, expect } from '../../fixtures/pages';
 test.describe('Validación de Onboarding Dashboard', () => {
   test('Validar la página y sus respectivos filtros', async ({ 
     page,
-    loginPage 
+    loginPage,
+    onboardingPage 
   }, testInfo) => {
     await test.step('Ir a Onboarding Dashboard', async () => {
-      await page.goto('https://admin.picap.io/onboarding_dashboard', { waitUntil: 'domcontentloaded' });
-      await expect(page).toHaveURL(/\/onboarding_dashboard/);
+      try {
+        await page.goto('https://admin.picap.io/onboarding_dashboard', { waitUntil: 'networkidle', timeout: 60000 });
+      } catch (error) {
+        if (!/\/onboarding_dashboard/.test(page.url())) {
+          throw error;
+        }
+      }
+      await onboardingPage.waitForDashboardReady();
       await loginPage.takeScreenshot(testInfo, '01 - Dashboard abierto');
     });
   });
